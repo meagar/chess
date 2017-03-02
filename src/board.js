@@ -1,4 +1,22 @@
-class Board {
+import Piece from './piece'
+import Pawn from './pawn'
+import Rook from './rook'
+import Knight from './knight'
+import Bishop from './bishop'
+import Queen from './queen'
+import King from './king'
+
+import Space from './space';
+
+function buildPiece(ch) {
+  const classMap = {
+    p: Pawn, r: Rook, n: Knight, b: Bishop, q: Queen, k: King,
+  };
+
+  return new classMap[ch.toLowerCase()](ch);
+};
+
+export default class Board {
   constructor() {
     this.spaces = {};
 
@@ -27,7 +45,7 @@ class Board {
 
       row.forEach((col, colIndex) => {
         if (col) {
-          this.rows[rowIndex][colIndex].setPiece(Piece.build(col));
+          this.rows[rowIndex][colIndex].setPiece(buildPiece(col));
         } else {
           this.rows[rowIndex][colIndex].clearPiece();
         }
