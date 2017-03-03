@@ -107,4 +107,8 @@ export default class Chess {
 Chess.ROW_LABELS = Board.ROW_LABELS;
 Chess.COL_LABELS = Board.COL_LABELS;
 
-window.Chess = Chess;
+if (typeof window !== 'undefined') {
+  window.Chess = Chess;
+} else if (typeof exports !== 'undefined') {
+  exports.Chess = Chess;
+}
