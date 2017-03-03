@@ -1,4 +1,5 @@
 import Piece from './piece';
+import Rook from './rook';
 
 export default class Bishop extends Piece {
   static deltas() { return [[1, 1], [1, -1], [-1, 1], [-1, -1]]; }

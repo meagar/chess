@@ -2,8 +2,8 @@ export default class Space {
   constructor(row, col) {
     this.row = row;
     this.col = col;
-    this.x = COL_LABELS.indexOf(col);
-    this.y = ROW_LABELS.indexOf(row);
+    this.x = Chess.COL_LABELS.indexOf(col);
+    this.y = Chess.ROW_LABELS.indexOf(row);
 
     this.label = `${row}${col}`;
     this.piece = null;

@@ -16,6 +16,9 @@ function buildPiece(ch) {
   return new classMap[ch.toLowerCase()](ch);
 };
 
+const ROW_LABELS = ['8', '7', '6', '5', '4', '3', '2', '1'];
+const COL_LABELS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
 export default class Board {
   constructor() {
     this.spaces = {};
@@ -116,3 +119,6 @@ export default class Board {
     return null;
   }
 }
+
+Board.ROW_LABELS = ROW_LABELS;
+Board.COL_LABELS = COL_LABELS;

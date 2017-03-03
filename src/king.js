@@ -1,4 +1,5 @@
 import Piece from './piece';
+import Queen from './queen';
 
 export default class King extends Piece {
   getMovableSpaces(space, board) {

@@ -8,16 +8,13 @@ import King from './king'
 
 import Board from './board'
 
-const ROW_LABELS = ['8', '7', '6', '5', '4', '3', '2', '1'];
-const COL_LABELS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-
 // const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
 
 export default class Chess {
   constructor() {
-    this.ROW_LABELS = ROW_LABELS;
-    this.COL_LABELS = COL_LABELS;
+    this.ROW_LABELS = Board.ROW_LABELS;
+    this.COL_LABELS = Board.COL_LABELS;
   }
 
   newGame() {
@@ -106,3 +103,8 @@ export default class Chess {
     return this.currentTurn;
   }
 }
+
+Chess.ROW_LABELS = Board.ROW_LABELS;
+Chess.COL_LABELS = Board.COL_LABELS;
+
+window.Chess = Chess;
