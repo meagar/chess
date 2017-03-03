@@ -5,7 +5,7 @@ export default class Space {
     this.x = Chess.COL_LABELS.indexOf(col);
     this.y = Chess.ROW_LABELS.indexOf(row);
 
-    this.label = `${row}${col}`;
+    this.label = `${col}${row}`;
     this.piece = null;
 
     this.color = ((this.x + (this.y % 2)) % 2) ? 'black' : 'white';
