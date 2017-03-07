@@ -8,17 +8,23 @@ import King from './king'
 
 import Board from './board'
 
-// const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
+const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+//const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
 
 export default class Chess {
-  constructor() {
+  constructor(state) {
     this.ROW_LABELS = Board.ROW_LABELS;
     this.COL_LABELS = Board.COL_LABELS;
+    this.INITIAL_BOARD = INITIAL_BOARD;
+    
+    this.board = new Board();
+
+    if (state) {
+      this.restoreGame(state);
+    }
   }
 
   newGame() {
-    this.board = new Board();
     this.restoreGame(INITIAL_BOARD);
     this.gameStates = [];
   }
@@ -27,6 +33,7 @@ export default class Chess {
     const parts = fenString.split(' ');
     this.board.restoreState(parts[0]);
     this.currentTurn = parts[1] === 'w' ? 'white' : 'black';
+
     this.restoreCastling(parts[2]);
     this.restoreEnPassant(parts[3]);
     this.halfMoveCount = parseInt(parts[4], 10);
@@ -63,9 +70,24 @@ export default class Chess {
     // No-op
   }
 
+  // space - A Space object or coords in the form 'c1'
+  // piece - The piece to get moves for; null to use piece occupying space
+  getMoves(space, piece) {
+    if (arguments.length == 1) {
+      if (typeof space == 'string') {
+        space = this.getSpace(space);
+      }
+      if (!piece && arguments.length === 1) {
+        piece = space.getPiece();
+      }
+    }
+
+    return piece.getMoves(space, this.getBoard());
+  }
+
   move(from, to, suspendRules = false) {
-    const fromSpace = this.board.spaces[from];
-    const toSpace = this.board.spaces[to];
+    const fromSpace = this.board.getSpace(from);
+    const toSpace = this.board.getSpace(to);
 
     const piece = fromSpace.getPiece();
     if (suspendRules || (piece.getMoves(fromSpace, this.getBoard()).indexOf(to) !== -1)) {
@@ -91,8 +113,12 @@ export default class Chess {
     return null;
   }
 
-  getSpace(row, col) {
-    return this.board.getSpace(row, col);
+  getSpace(rank, file) {
+    if (arguments.length == 2) {
+      return this.board.getSpace(rank, file);
+    } else {
+      return this.board.getSpace(rank);
+    }
   }
 
   getBoard() {

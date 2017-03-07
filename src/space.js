@@ -1,3 +1,5 @@
+import Chess from './chess';
+
 export default class Space {
   constructor(row, col) {
     this.row = row;
