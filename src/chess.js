@@ -16,7 +16,7 @@ export default class Chess {
     this.ROW_LABELS = Board.ROW_LABELS;
     this.COL_LABELS = Board.COL_LABELS;
     this.INITIAL_BOARD = INITIAL_BOARD;
-    
+
     this.board = new Board();
 
     if (state) {
@@ -101,7 +101,7 @@ export default class Chess {
   }
 
   // Return which color is in check, if any (null otherwise)
-  check(gameState) {
+  getPlayerInCheck(gameState) {
     if (this.getBoard().isInCheck('white')) {
       return 'white';
     }

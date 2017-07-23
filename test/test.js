@@ -47,4 +47,18 @@ describe('chess', () => {
       });
     })
   });
+
+  describe ('check', () => {
+    it('knows when the king is in check', () => {
+
+    });
+
+    it('prevents the king from moving into check' () => {
+      const game = new Chess('rnb1kbnr/ppp2ppp/2q5/3pp3/2KP1B2/8/PPP1PPPP/RN1Q1BNR b KQkq - 0 1');
+    })
+  });
+
+  describe('checkMate', () => {
+
+  });
 });
