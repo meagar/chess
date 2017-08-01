@@ -84,13 +84,37 @@ export default class Board {
   }
 
   getSpaces() {
-    return this.rows;
+    return Object.values(this.spaces);
+  }
+
+  findKing(color) {
+    const search = (color == 'white' ? 'K' : 'k');
+
+    return this.getSpaces().find((space) => {
+      return space.getPiece() && space.getPiece().ch == search;
+    })
   }
 
   eachSpace(callback) {
     Object.keys(this.spaces).forEach((label) => {
       callback(this.spaces[label], label);
     });
+  }
+
+  eachPiece(color, callback) {
+    if (arguments.length == 1) {
+      callback = color;
+      color = false;
+    }
+
+    this.eachSpace((space) => {
+      let piece = space.getPiece();
+      if (piece) {
+        if (!color || piece.getColor() == color) {
+          callback(piece, space);
+        }
+      }
+    })
   }
 
   getRelativeSpace(space, piece, dx, dy, movable = false, capture = null) {

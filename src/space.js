@@ -17,6 +17,21 @@ export default class Space {
     return !this.piece;
   }
 
+  isUnderThreat(board) {
+    const attackingSpace = board.getSpaces().find((space) => {
+      let piece = space.getPiece();
+
+      if (piece && piece.getMoves(space, board).indexOf(this.label) !== -1) {
+        console.log("piece", piece)
+        return true
+      } else {
+        return false
+      }
+    });
+
+    return !!attackingSpace;
+  }
+
   setPiece(piece) {
     this.piece = piece;
   }

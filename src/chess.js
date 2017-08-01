@@ -8,19 +8,34 @@ import King from './king'
 
 import Board from './board'
 
-const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+//const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 //const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
+// A board where the king is in check
+const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk5/4P3/2Q5/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
 
 export default class Chess {
-  constructor(state) {
+  constructor(whiteFn, blackFn, state) {
     this.ROW_LABELS = Board.ROW_LABELS;
     this.COL_LABELS = Board.COL_LABELS;
     this.INITIAL_BOARD = INITIAL_BOARD;
 
     this.board = new Board();
 
+    this.whiteFn = whiteFn;
+    this.blackFn = blackFn;
+
     if (state) {
       this.restoreGame(state);
+    }
+  }
+
+  run() {
+    for (;;) {
+      const callback = (this.currentTurn === 'white' ? this.whiteFn : this.blackFn);
+
+      callback(this).then((move) => {
+
+      });
     }
   }
 
@@ -88,36 +103,54 @@ export default class Chess {
   move(from, to, suspendRules = false) {
     const fromSpace = this.board.getSpace(from);
     const toSpace = this.board.getSpace(to);
-
     const piece = fromSpace.getPiece();
-    if (suspendRules || (piece.getMoves(fromSpace, this.getBoard()).indexOf(to) !== -1)) {
+
+    if (suspendRules || this.canMove(fromSpace, toSpace, piece)) {
       // Make sure we can legally move to the target space
+      const capture = toSpace.getPiece();
       toSpace.setPiece(piece);
       fromSpace.clearPiece();
+
+      if (this.getPlayerInCheck() === piece.getColor()) {
+        // This move would expose the player's own king to check
+        fromSpace.setPiece(toSpace.getPiece());
+        toSpace.setPiece(capture);
+        return false;
+      }
+
       this.currentTurn = this.currentTurn === 'black' ? 'white' : 'black';
       return true;
     }
     return false;
   }
 
+  canMove(fromSpace, toSpace, piece) {
+    // First verify that the given space is reachable by this piece
+    if (piece.getMoves(fromSpace, this.getBoard()).indexOf(toSpace.getLabel()) === -1) {
+      return false;
+    }
+
+    // We can't capture kings
+    if (toSpace.getPiece() && toSpace.getPiece().ch.toLowerCase() == 'k') {
+      return false;
+    }
+
+    return true;
+  }
+
   // Return which color is in check, if any (null otherwise)
-  getPlayerInCheck(gameState) {
-    if (this.getBoard().isInCheck('white')) {
-      return 'white';
-    }
-
-    if (this.getBoard().isInCheck('black')) {
-      return 'black';
-    }
-
-    return null;
+  getPlayerInCheck() {
+    return ['white', 'black'].find((color) => {
+      let kingSpace = this.getBoard().findKing(color)
+      return kingSpace.isUnderThreat(this.getBoard());
+    });
   }
 
   getSpace(rank, file) {
     if (arguments.length == 2) {
-      return this.board.getSpace(rank, file);
+      return this.getBoard().getSpace(rank, file);
     } else {
-      return this.board.getSpace(rank);
+      return this.getBoard().getSpace(rank);
     }
   }
 

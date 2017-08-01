@@ -7,6 +7,10 @@ export default class Piece {
     return (this.ch.toUpperCase() === this.ch) ? 'white' : 'black';
   }
 
+  getOppositeColor() {
+    return (this.ch.toUpperCase() === this.ch) ? 'black' : 'white';
+  }
+
   black() { return this.getColor() === 'black'; }
   white() { return this.getColor() === 'white'; }
 
