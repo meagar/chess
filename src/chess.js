@@ -8,10 +8,10 @@ import King from './king'
 
 import Board from './board'
 
-//const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 //const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
 // A board where the king is in check
-const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk5/4P3/2Q5/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
+//const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
 
 export default class Chess {
   constructor(whiteFn, blackFn, state) {
@@ -105,7 +105,7 @@ export default class Chess {
     const toSpace = this.board.getSpace(to);
     const piece = fromSpace.getPiece();
 
-    if (suspendRules || this.canMove(fromSpace, toSpace, piece)) {
+    if (suspendRules || this._canMove(fromSpace, toSpace, piece)) {
       // Make sure we can legally move to the target space
       const capture = toSpace.getPiece();
       toSpace.setPiece(piece);
@@ -124,7 +124,7 @@ export default class Chess {
     return false;
   }
 
-  canMove(fromSpace, toSpace, piece) {
+  _canMove(fromSpace, toSpace, piece) {
     // First verify that the given space is reachable by this piece
     if (piece.getMoves(fromSpace, this.getBoard()).indexOf(toSpace.getLabel()) === -1) {
       return false;

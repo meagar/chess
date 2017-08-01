@@ -4,7 +4,6 @@ export default class Rook extends Piece {
   static deltas() { return [[0, 1], [0, -1], [1, 0], [-1, 0]]; }
 
   getMovableSpaces(space, board) {
-    console.log('get moves', space, board);
     return this.getSlideMoves(space, board, Rook.deltas());
   }
 

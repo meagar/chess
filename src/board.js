@@ -117,6 +117,8 @@ export default class Board {
     })
   }
 
+  // movable - If true, only return the space if it's empty
+  // capture - If true, only return the space if it contains a piece of the opposite color
   getRelativeSpace(space, piece, dx, dy, movable = false, capture = null) {
     if (capture === null) {
       capture = movable;

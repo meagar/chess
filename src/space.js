@@ -22,7 +22,6 @@ export default class Space {
       let piece = space.getPiece();
 
       if (piece && piece.getMoves(space, board).indexOf(this.label) !== -1) {
-        console.log("piece", piece)
         return true
       } else {
         return false
