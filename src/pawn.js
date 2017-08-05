@@ -10,7 +10,7 @@ export default class Pawn extends Piece {
     const moves = [board.getRelativeSpace(space, this, 0, 1, true, false)];
 
     // If we're not blocked, and we're still in the starting row...
-    if (moves[0] && this.isStartingRow(space)) && moves[0]) {
+    if (moves[0] && this.isStartingRow(space)) {
       // then we can advance two spaces
       moves.push(board.getRelativeSpace(space, this, 0, 2, true, false));
     }

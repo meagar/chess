@@ -42,13 +42,13 @@ describe('board', () => {
         assert.equal(pieces, 'rnbqkbnrppppppppPPPPPPPPRNBQKBNR');
       })
     });
-
-    describe('#findKing', () => {
-      it('finds the right space for the given color', () => {
-        const board = getBoard();
-        assert.equal(board.findKing('white').getLabel(), 'e1')
-        assert.equal(board.findKing('black').getLabel(), 'e8')
-      });
+  });
+  
+  describe('#findKing', () => {
+    it('finds the right space for the given color', () => {
+      const board = getBoard();
+      assert.equal(board.findKing('white').getLabel(), 'e1')
+      assert.equal(board.findKing('black').getLabel(), 'e8')
     });
   });
 });

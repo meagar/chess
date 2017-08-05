@@ -68,7 +68,6 @@ export default class Chess {
     return state.join(' ');
   }
 
-
   // space - A Space object or coords in the form 'c1'
   // piece - The piece to get moves for; null to use piece occupying space
   getMoves(space, piece) {
@@ -211,4 +210,17 @@ if (typeof window !== 'undefined') {
   window.Chess = Chess;
 } else if (typeof exports !== 'undefined') {
   exports.Chess = Chess;
+}
+
+Chess.buildPiece = function (ch) {
+  const klass = {
+    p: Pawn,
+    n: Knight,
+    b: Bishop,
+    r: Rook,
+    q: Queen,
+    k: King
+  }[ch.toLowerCase()];
+
+  return new klass(ch);
 }

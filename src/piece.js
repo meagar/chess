@@ -1,4 +1,5 @@
 export default class Piece {
+
   constructor(ch) {
     this.ch = ch;
   }
@@ -22,7 +23,6 @@ export default class Piece {
 
   // Return a list of all valid moves for the given piece, from the given space, on the given board
   getMovableSpaces(space, board) {
-    alert('Cannot call `getMovableSpaces` fo ');
+    throw "getMovableSpace called on Piece, override this in base class"
   }
-
 }

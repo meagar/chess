@@ -11,8 +11,9 @@ describe('Pawn', () => {
 
   describe('starting position', () => {
     context('when the way is clear', () => {
-      it('should be able to move one or two spaces', () => {
-        assert.deepEqual(getGame().getMoves('e2'), ['e3','e4'])
+      it('should be able to advance two ranks from its starting row', () => {
+        assert.deepEqual(getGame().getMoves('c2').sort(), ['c3', 'c4']);
+        assert.deepEqual(getGame().getMoves('e2').sort(), ['e3','e4'])
       });
     });
 
