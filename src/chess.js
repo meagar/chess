@@ -12,6 +12,7 @@ const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 //const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
 // A board where the king is in check
 //const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
+//const INITIAL_BOARD = 'rnbqkbnr/2ppppp1/pp5p/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1';
 
 export default class Chess {
   constructor(whiteFn, blackFn, state) {
@@ -31,7 +32,7 @@ export default class Chess {
 
   run() {
     for (;;) {
-      const callback = (this.currentTurn === 'white' ? this.whiteFn : this.blackFn);
+      const callback = (this._currentTurn === 'white' ? this.whiteFn : this.blackFn);
 
       callback(this).then((move) => {
 
@@ -44,46 +45,29 @@ export default class Chess {
     this.gameStates = [];
   }
 
+  // Restore the game state from a FEN string
   restoreGame(fenString) {
     const parts = fenString.split(' ');
     this.board.restoreState(parts[0]);
-    this.currentTurn = parts[1] === 'w' ? 'white' : 'black';
+    this._currentTurn = parts[1] === 'w' ? 'white' : 'black';
 
-    this.restoreCastling(parts[2]);
-    this.restoreEnPassant(parts[3]);
+    this._restoreCastling(parts[2]);
+    this._restoreEnPassant(parts[3]);
     this.halfMoveCount = parseInt(parts[4], 10);
     this.moveCount = parseInt(parts[5], 10);
   }
 
+  // Produce a FEN string for the current game state
   persistGame() {
     const state = [this.board.persistState()];
     state.push(this.getCurrentTurn() === 'white' ? 'w' : 'b');
-    state.push(this.persistCastling());
-    state.push(this.persistEnPassant());
+    state.push(this._persistCastling());
+    state.push(this._persistEnPassant());
     state.push(this.halfMoveCount);
     state.push(this.moveCount);
     return state.join(' ');
   }
 
-  persistCastling() {
-    const castling = Object.keys(this.castling).filter(key => this.castling[key]).join('');
-    return castling || '-';
-  }
-
-  restoreCastling(str) {
-    this.castling = {};
-    ['K', 'Q', 'k', 'q'].forEach((flag) => {
-      this.castling[flag] = (str.indexOf(flag) > -1);
-    });
-  }
-
-  persistEnPassant() {
-    return '-';
-  }
-
-  restoreEnPassant(str) {
-    // No-op
-  }
 
   // space - A Space object or coords in the form 'c1'
   // piece - The piece to get moves for; null to use piece occupying space
@@ -105,37 +89,50 @@ export default class Chess {
     const toSpace = this.board.getSpace(to);
     const piece = fromSpace.getPiece();
 
+
+    if (piece.getColor() !== this.getCurrentTurn()) {
+      alert(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
+      return false;
+    }
+
     if (suspendRules || this._canMove(fromSpace, toSpace, piece)) {
       // Make sure we can legally move to the target space
       const capture = toSpace.getPiece();
       toSpace.setPiece(piece);
       fromSpace.clearPiece();
-
-      if (this.getPlayerInCheck() === piece.getColor()) {
-        // This move would expose the player's own king to check
-        fromSpace.setPiece(toSpace.getPiece());
-        toSpace.setPiece(capture);
-        return false;
-      }
-
-      this.currentTurn = this.currentTurn === 'black' ? 'white' : 'black';
+      this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black';
       return true;
     }
     return false;
   }
 
   _canMove(fromSpace, toSpace, piece) {
-    // First verify that the given space is reachable by this piece
-    if (piece.getMoves(fromSpace, this.getBoard()).indexOf(toSpace.getLabel()) === -1) {
-      return false;
-    }
+    if (this._validateMove(fromSpace, toSpace, piece)) {
+      // Make sure we can legally move to the target space
+      const capture = toSpace.getPiece();
+      toSpace.setPiece(piece);
+      fromSpace.clearPiece();
 
-    // We can't capture kings
-    if (toSpace.getPiece() && toSpace.getPiece().ch.toLowerCase() == 'k') {
-      return false;
-    }
+      const canMove = !this.playerIsInCheck(piece.getColor());
 
-    return true;
+      // This move would expose the player's own king to check
+      fromSpace.setPiece(toSpace.getPiece());
+      toSpace.setPiece(capture);
+
+      return canMove;
+    }
+    return false;
+  }
+
+  getWinner() {
+    const color = this.getPlayerInCheck()
+
+    console.log(color, "is in check, checking for vicotry")
+    // Figure out if either player is in check, and if that player can escape it
+    this.board.eachPiece(color, (piece, space) => {
+      this.getMoves(space, piece)
+      console.log(piece, space)
+    })
   }
 
   // Return which color is in check, if any (null otherwise)
@@ -144,6 +141,11 @@ export default class Chess {
       let kingSpace = this.getBoard().findKing(color)
       return kingSpace.isUnderThreat(this.getBoard());
     });
+  }
+
+  playerIsInCheck(color) {
+    // TODO optimize
+    return this.getPlayerInCheck() === color;
   }
 
   getSpace(rank, file) {
@@ -159,7 +161,46 @@ export default class Chess {
   }
 
   getCurrentTurn() {
-    return this.currentTurn;
+    return this._currentTurn;
+  }
+
+  //
+  // Private
+  //
+
+  _persistCastling() {
+    const castling = Object.keys(this.castling).filter(key => this.castling[key]).join('');
+    return castling || '-';
+  }
+
+  _restoreCastling(str) {
+    this.castling = {};
+    ['K', 'Q', 'k', 'q'].forEach((flag) => {
+      this.castling[flag] = (str.indexOf(flag) > -1);
+    });
+  }
+
+  _persistEnPassant() {
+    return '-';
+  }
+
+  _restoreEnPassant(str) {
+    // No-op
+  }
+
+  // Return true if the give piece can move to the given space (no checking of check/checkmate)
+  _validateMove(fromSpace, toSpace, piece) {
+    // First verify that the given space is reachable by this piece
+    if (piece.getMoves(fromSpace, this.getBoard()).indexOf(toSpace.getLabel()) === -1) {
+      return false;
+    }
+
+    // We can't capture kings
+    if (toSpace.getPiece() && toSpace.getPiece().ch.toLowerCase() == 'k') {
+      return false;
+    }
+
+    return true;
   }
 }
 
