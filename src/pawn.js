@@ -9,13 +9,12 @@ export default class Pawn extends Piece {
     // by default we can move forward one space
     const moves = [board.getRelativeSpace(space, this, 0, 1, true, false)];
 
-    // If we're still in the starting row, and the first space is empty.
-    if (this.isStartingRow(space)) {//} && moves[0]) {
+    // If we're not blocked, and we're still in the starting row...
+    if (moves[0] && this.isStartingRow(space)) && moves[0]) {
+      // then we can advance two spaces
       moves.push(board.getRelativeSpace(space, this, 0, 2, true, false));
     }
 
-    // We can move forward two spaces if we're on the "starting line" for pawns
-    // debugger;
     const captures = [
       board.getRelativeSpace(space, this, 1, 1),
       board.getRelativeSpace(space, this, -1, 1),
