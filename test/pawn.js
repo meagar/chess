@@ -28,13 +28,28 @@ describe('Pawn', () => {
     context('when the promotion is absent', () => {
       it('raises an error', () => {
         const game = setupGame();
-        assert.fail(() => { game.move('f7', 'f8') }, /promotion/);
+
+        return game.move('f7', 'f8').then(() => {
+          // Success handler should not be called
+          assert.fail('success handler was called');
+        }, (error) => {
+          assert(error.message.match(/promote/));
+        });
       })
     })
 
     context('when the promotion is to Queen', () => {
       it('promots to queen', () => {
-        setupGame();
+        const game = setupGame();
+        function promote() {
+          return new Promise((resolve) => {
+            resolve('q');
+          })
+        }
+
+        return game.move('f7', 'f8', { promote }).then(() => {
+          assert.equal(game.getSpace('f8').getPiece().ch, 'Q');
+        })
       })
     })
   });

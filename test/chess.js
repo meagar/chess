@@ -14,8 +14,9 @@ describe('chess', () => {
 
     it('should accept moves', () => {
       const game = getGame()
-      assert.equal(game.move('b1', 'a3'), true);
-      assert.equal(game.persistGame(), 'rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - 0 1');
+      return game.move('b1', 'a3').then(() => {
+        assert.equal(game.persistGame(), 'rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - 0 1');
+      });
     });
   });
 
