@@ -1,14 +1,8 @@
 import Chess from '../src/chess';
+import getGame from './helper'
 var assert = require('assert');
 
 describe('Pawn', () => {
-  function getGame(state) {
-    const game = new Chess();
-    game.newGame();
-    if (state) game.restoreGame(state);
-    return game;
-  }
-
   describe('starting position', () => {
     context('when the way is clear', () => {
       it('should be able to advance two ranks from its starting row', () => {
@@ -24,5 +18,24 @@ describe('Pawn', () => {
         assert.deepEqual(game.getMoves('e2'), []);
       });
     });
+  });
+
+  describe('promotion', () => {
+    function setupGame() {
+      return getGame({f7: 'P', d8: 'k', d1: 'K'})
+    }
+
+    context('when the promotion is absent', () => {
+      it('raises an error', () => {
+        const game = setupGame();
+        assert.fail(() => { game.move('f7', 'f8') }, /promotion/);
+      })
+    })
+
+    context('when the promotion is to Queen', () => {
+      it('promots to queen', () => {
+        setupGame();
+      })
+    })
   });
 });

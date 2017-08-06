@@ -29,4 +29,8 @@ export default class Pawn extends Piece {
     // TODO : en passant
     return moves.filter(m => m);
   }
+
+  canPromote(space) {
+    return this.white() && space.row == '8' || this.black() && space.row == '1';
+  }
 }

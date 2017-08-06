@@ -1,4 +1,6 @@
 import Chess from './chess';
+import Pawn from './pawn';
+import Queen from './queen';
 
 export default class Space {
   constructor(row, col) {
@@ -31,8 +33,8 @@ export default class Space {
     return !!attackingSpace;
   }
 
-  setPiece(piece) {
-    this.piece = piece;
+  setPiece(piece, promotion) {
+    return this.piece = piece;
   }
 
   clearPiece() {

@@ -4,14 +4,10 @@ import Rook from '../src/rook';
 
 var assert = require('assert');
 
+import getGame from './helper';
+
 describe('chess', () => {
   describe('A new game', () => {
-    function getGame() {
-      const game = new Chess()
-      game.newGame();
-      return game;
-    }
-
     it('should serialize to the initial state', () => {
       assert.equal(getGame().persistGame(), 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     });
@@ -53,8 +49,8 @@ describe('chess', () => {
 
   describe ('check', () => {
     it('knows when the king is in check', () => {
-      const game = new Chess('rnb1kbnr/ppp2ppp/2q5/3pp3/2KP1B2/8/PPP1PPPP/RN1Q1BNR b KQkq - 0 1');
-      //assert.equal(game.getPlayerInCheck(), 'white')
+      const game = getGame('rnb1kbnr/ppp2ppp/2q5/3pp3/2KP1B2/8/PPP1PPPP/RN1Q1BNR b KQkq - 0 1');
+      assert.equal(game.getPlayerInCheck(), 'white')
     });
 
     it('prevents the king from moving into check');

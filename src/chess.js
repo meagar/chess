@@ -1,14 +1,14 @@
-import Piece from './piece'
-import Pawn from './pawn'
-import Rook from './rook'
-import Knight from './knight'
-import Bishop from './bishop'
-import Queen from './queen'
-import King from './king'
+import Piece from './piece';
+import Pawn from './pawn';
+import Rook from './rook';
+import Knight from './knight';
+import Bishop from './bishop';
+import Queen from './queen';
+import King from './king';
+import Space from './space';
+import Board from './board';
 
-import Board from './board'
-
-const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const INITIAL_BOARD = 'k7/13P2K/8/8/8/8/PPPPPPPP/RNBQ1BNR w KQkq - 0 1';
 //const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
 // A board where the king is in check
 //const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
@@ -83,39 +83,63 @@ export default class Chess {
     return piece.getMoves(space, this.getBoard());
   }
 
-  move(from, to, suspendRules = false) {
+  // Returns a promise
+  move(from, to, options = {}) {
     const fromSpace = this.board.getSpace(from);
     const toSpace = this.board.getSpace(to);
     const piece = fromSpace.getPiece();
 
-
     if (piece.getColor() !== this.getCurrentTurn()) {
-      alert(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
+      throw(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
       return false;
     }
 
-    if (suspendRules || this._canMove(fromSpace, toSpace, piece)) {
+    if (this._canMove(fromSpace, toSpace, piece, options)) {
       // Make sure we can legally move to the target space
       const capture = toSpace.getPiece();
       toSpace.setPiece(piece);
       fromSpace.clearPiece();
-      this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black';
-      return true;
+
+      let moved;
+
+      if (piece.canPromote && piece.canPromote(toSpace)) {
+        moved = new Promise((resolve, reject) => {
+          options.promote(toSpace).then((ch) => {
+            // Promoted
+            const piece = Chess.buildPiece(toSpace.getPiece().white() ? ch.toUpperCase() : ch.toLowerCase());
+            toSpace.setPiece(piece);
+            resolve();
+          }, () => {
+            // Promotion cancelled
+            toSpace.setPiece(capture);
+            fromSpace.setPiece(piece);
+            reject('Move cancelled by user');
+          });
+        });
+      } else {
+        moved = Promise.resolve();
+      }
+
+      return moved.then(() => { this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black'; })
     }
-    return false;
+
+    return Promise.reject('Illegal move');
   }
 
-  _canMove(fromSpace, toSpace, piece) {
+  _canMove(fromSpace, toSpace, piece, options) {
+    if (options.suspendRules) { return true; }
+
     if (this._validateMove(fromSpace, toSpace, piece)) {
       // Make sure we can legally move to the target space
       const capture = toSpace.getPiece();
       toSpace.setPiece(piece);
       fromSpace.clearPiece();
 
+      // See if this move would expose the player's own king to check
       const canMove = !this.playerIsInCheck(piece.getColor());
 
-      // This move would expose the player's own king to check
-      fromSpace.setPiece(toSpace.getPiece());
+      // Restore the old state of the board
+      fromSpace.setPiece(piece);
       toSpace.setPiece(capture);
 
       return canMove;
@@ -130,7 +154,6 @@ export default class Chess {
     // Figure out if either player is in check, and if that player can escape it
     this.board.eachPiece(color, (piece, space) => {
       this.getMoves(space, piece)
-      console.log(piece, space)
     })
   }
 
@@ -188,7 +211,7 @@ export default class Chess {
   }
 
   // Return true if the give piece can move to the given space (no checking of check/checkmate)
-  _validateMove(fromSpace, toSpace, piece) {
+  _validateMove(fromSpace, toSpace, piece, options) {
     // First verify that the given space is reachable by this piece
     if (piece.getMoves(fromSpace, this.getBoard()).indexOf(toSpace.getLabel()) === -1) {
       return false;
