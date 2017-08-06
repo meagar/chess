@@ -31,6 +31,6 @@ export default class Pawn extends Piece {
   }
 
   canPromote(space) {
-    return this.white() && space.row == '8' || this.black() && space.row == '1';
+    return (this.white() && space.row === '8') || (this.black() && space.row === '1');
   }
 }

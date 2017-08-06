@@ -1,13 +1,14 @@
 import Chess from '../src/chess';
-import getGame from './helper'
-var assert = require('assert');
+import getGame from './helper';
+
+const assert = require('assert');
 
 describe('Pawn', () => {
   describe('starting position', () => {
     context('when the way is clear', () => {
       it('should be able to advance two ranks from its starting row', () => {
         assert.deepEqual(getGame().getMoves('c2').sort(), ['c3', 'c4']);
-        assert.deepEqual(getGame().getMoves('e2').sort(), ['e3','e4'])
+        assert.deepEqual(getGame().getMoves('e2').sort(), ['e3', 'e4']);
       });
     });
 
@@ -22,7 +23,7 @@ describe('Pawn', () => {
 
   describe('promotion', () => {
     function setupGame() {
-      return getGame({f7: 'P', d8: 'k', d1: 'K'})
+      return getGame({ f7: 'P', d8: 'k', d1: 'K' });
     }
 
     context('when the promotion is absent', () => {
@@ -35,8 +36,8 @@ describe('Pawn', () => {
         }, (error) => {
           assert(error.message.match(/promote/));
         });
-      })
-    })
+      });
+    });
 
     context('when the promotion is to Queen', () => {
       it('promots to queen', () => {
@@ -44,13 +45,13 @@ describe('Pawn', () => {
         function promote() {
           return new Promise((resolve) => {
             resolve('q');
-          })
+          });
         }
 
         return game.move('f7', 'f8', { promote }).then(() => {
           assert.equal(game.getSpace('f8').getPiece().ch, 'Q');
-        })
-      })
-    })
+        });
+      });
+    });
   });
 });

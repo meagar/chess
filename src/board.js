@@ -1,10 +1,10 @@
-import Piece from './piece'
-import Pawn from './pawn'
-import Rook from './rook'
-import Knight from './knight'
-import Bishop from './bishop'
-import Queen from './queen'
-import King from './king'
+import Piece from './piece';
+import Pawn from './pawn';
+import Rook from './rook';
+import Knight from './knight';
+import Bishop from './bishop';
+import Queen from './queen';
+import King from './king';
 
 import Space from './space';
 
@@ -14,7 +14,7 @@ function buildPiece(ch) {
   };
 
   return new classMap[ch.toLowerCase()](ch);
-};
+}
 
 const ROW_LABELS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 const COL_LABELS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -88,11 +88,11 @@ export default class Board {
   }
 
   findKing(color) {
-    const search = (color == 'white' ? 'K' : 'k');
+    const search = (color === 'white' ? 'K' : 'k');
 
     return this.getSpaces().find((space) => {
-      return space.getPiece() && space.getPiece().ch == search;
-    })
+      return space.getPiece() && space.getPiece().ch === search;
+    });
   }
 
   eachSpace(callback) {
@@ -102,19 +102,19 @@ export default class Board {
   }
 
   eachPiece(color, callback) {
-    if (arguments.length == 1) {
+    if (arguments.length === 1) {
       callback = color;
       color = false;
     }
 
     this.eachSpace((space) => {
-      let piece = space.getPiece();
+      const piece = space.getPiece();
       if (piece) {
-        if (!color || piece.getColor() == color) {
+        if (!color || piece.getColor() === color) {
           callback(piece, space);
         }
       }
-    })
+    });
   }
 
   // movable - If true, only return the space if it's empty

@@ -10,8 +10,8 @@ import Board from './board';
 
 const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 // A board where the king is in check
-//const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
-//const INITIAL_BOARD = 'rnbqkbnr/2ppppp1/pp5p/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1';
+// const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
+// const INITIAL_BOARD = 'rnbqkbnr/2ppppp1/pp5p/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1';
 
 export default class Chess {
   constructor(whiteFn, blackFn) {
@@ -68,8 +68,8 @@ export default class Chess {
   // space - A Space object or coords in the form 'c1'
   // piece - The piece to get moves for; null to use piece occupying space
   getMoves(space, piece) {
-    if (arguments.length == 1) {
-      if (typeof space == 'string') {
+    if (arguments.length === 1) {
+      if (typeof space === 'string') {
         space = this.getSpace(space);
       }
       if (!piece && arguments.length === 1) {
@@ -87,8 +87,7 @@ export default class Chess {
     const piece = fromSpace.getPiece();
 
     if (piece.getColor() !== this.getCurrentTurn()) {
-      throw(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
-      return false;
+      throw new Error(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
     }
 
     if (this._canMove(fromSpace, toSpace, piece, options)) {
@@ -103,8 +102,8 @@ export default class Chess {
         moved = new Promise((resolve, reject) => {
           options.promote(toSpace).then((ch) => {
             // Promoted
-            const piece = Chess.buildPiece(toSpace.getPiece().white() ? ch.toUpperCase() : ch.toLowerCase());
-            toSpace.setPiece(piece);
+            const newPiece = Chess.buildPiece(toSpace.getPiece().white() ? ch.toUpperCase() : ch.toLowerCase());
+            toSpace.setPiece(newPiece);
             resolve();
           }, () => {
             // Promotion cancelled
@@ -117,7 +116,7 @@ export default class Chess {
         moved = Promise.resolve();
       }
 
-      return moved.then(() => { this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black'; })
+      return moved.then(() => { this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black'; });
     }
 
     return Promise.reject('Illegal move');
@@ -145,19 +144,18 @@ export default class Chess {
   }
 
   getWinner() {
-    const color = this.getPlayerInCheck()
+    const color = this.getPlayerInCheck();
 
-    console.log(color, "is in check, checking for vicotry")
     // Figure out if either player is in check, and if that player can escape it
     this.board.eachPiece(color, (piece, space) => {
-      this.getMoves(space, piece)
-    })
+      this.getMoves(space, piece);
+    });
   }
 
   // Return which color is in check, if any (null otherwise)
   getPlayerInCheck() {
     return ['white', 'black'].find((color) => {
-      let kingSpace = this.getBoard().findKing(color)
+      const kingSpace = this.getBoard().findKing(color);
       return kingSpace.isUnderThreat(this.getBoard());
     });
   }
@@ -168,11 +166,10 @@ export default class Chess {
   }
 
   getSpace(rank, file) {
-    if (arguments.length == 2) {
+    if (arguments.length === 2) {
       return this.getBoard().getSpace(rank, file);
-    } else {
-      return this.getBoard().getSpace(rank);
     }
+    return this.getBoard().getSpace(rank);
   }
 
   getBoard() {
@@ -215,7 +212,7 @@ export default class Chess {
     }
 
     // We can't capture kings
-    if (toSpace.getPiece() && toSpace.getPiece().ch.toLowerCase() == 'k') {
+    if (toSpace.getPiece() && toSpace.getPiece().ch.toLowerCase() === 'k') {
       return false;
     }
 
@@ -233,14 +230,14 @@ if (typeof window !== 'undefined') {
 }
 
 Chess.buildPiece = function (ch) {
-  const klass = {
+  const Klass = {
     p: Pawn,
     n: Knight,
     b: Bishop,
     r: Rook,
     q: Queen,
-    k: King
+    k: King,
   }[ch.toLowerCase()];
 
-  return new klass(ch);
-}
+  return new Klass(ch);
+};

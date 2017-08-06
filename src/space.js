@@ -21,20 +21,16 @@ export default class Space {
 
   isUnderThreat(board) {
     const attackingSpace = board.getSpaces().find((space) => {
-      let piece = space.getPiece();
+      const piece = space.getPiece();
 
-      if (piece && piece.getMoves(space, board).indexOf(this.label) !== -1) {
-        return true
-      } else {
-        return false
-      }
+      return piece && piece.getMoves(space, board).indexOf(this.label) !== -1;
     });
 
     return !!attackingSpace;
   }
 
   setPiece(piece, promotion) {
-    return this.piece = piece;
+    this.piece = piece;
   }
 
   clearPiece() {

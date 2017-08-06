@@ -12,17 +12,17 @@ export default function getGame(state) {
     game.newGame();
   } else if (state === 'empty') {
     // no-op
-  } else if (typeof(state) == 'string') {
+  } else if (typeof state === 'string') {
     // FEN string
     game.newGame();
-    game.restoreGame(state)
-  } else if (typeof(state) == 'object') {
+    game.restoreGame(state);
+  } else if (typeof state === 'object') {
     // key/value pairs
-    for (const key of Object.keys(state)) {
+    Object.keys(state).forEach((key) => {
       game.getSpace(key).setPiece(Chess.buildPiece(state[key]));
-    }
+    });
   } else {
-    throw 'Invalid argument to getGame'
+    throw new Error('Invalid argument to getGame');
   }
 
   return game;

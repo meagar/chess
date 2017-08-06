@@ -1,10 +1,10 @@
 import Chess from '../src/chess';
 import Knight from '../src/knight';
 import Rook from '../src/rook';
-
-var assert = require('assert');
-
 import getGame from './helper';
+
+const assert = require('assert');
+
 
 describe('chess', () => {
   describe('A new game', () => {
@@ -13,7 +13,7 @@ describe('chess', () => {
     });
 
     it('should accept moves', () => {
-      const game = getGame()
+      const game = getGame();
       return game.move('b1', 'a3').then(() => {
         assert.equal(game.persistGame(), 'rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - 0 1');
       });
@@ -45,13 +45,13 @@ describe('chess', () => {
       //   assert.equal(game.move('c7', 'c5'), true);
       //   assert.deepEqual(game.getMoves('d5').sort(), ['c6', 'd6']);
       // });
-    })
+    });
   });
 
-  describe ('check', () => {
+  describe('check', () => {
     it('knows when the king is in check', () => {
       const game = getGame('rnb1kbnr/ppp2ppp/2q5/3pp3/2KP1B2/8/PPP1PPPP/RN1Q1BNR b KQkq - 0 1');
-      assert.equal(game.getPlayerInCheck(), 'white')
+      assert.equal(game.getPlayerInCheck(), 'white');
     });
 
     it('prevents the king from moving into check');
@@ -63,5 +63,5 @@ describe('chess', () => {
 
   describe('draws', () => {
     it('correctly reports draws');
-  })
+  });
 });

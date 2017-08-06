@@ -23,6 +23,6 @@ export default class Piece {
 
   // Return a list of all valid moves for the given piece, from the given space, on the given board
   getMovableSpaces(space, board) {
-    throw "getMovableSpace called on Piece, override this in base class"
+    throw new Error('getMovableSpace called on Piece, override this in base class');
   }
 }
