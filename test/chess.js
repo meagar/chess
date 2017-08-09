@@ -51,10 +51,17 @@ describe('chess', () => {
   describe('check', () => {
     it('knows when the king is in check', () => {
       const game = getGame('rnb1kbnr/ppp2ppp/2q5/3pp3/2KP1B2/8/PPP1PPPP/RN1Q1BNR b KQkq - 0 1');
-      assert.equal(game.getPlayerInCheck(), 'white');
+      assert(game.playerIsInCheck('white'));
     });
 
-    it('prevents the king from moving into check');
+    it('prevents the king from moving into check', () => {
+      const game = getGame({ d3: 'K', d5: 'k' });
+      return game.move('d3', 'd4').then(() => {
+        assert.fail('King was allowed to move into check');
+      }, (err) => {
+        assert.ok(`King was prevented from moving into check: ${err}`);
+      });
+    });
   });
 
   describe('checkMate', () => {

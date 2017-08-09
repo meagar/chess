@@ -152,17 +152,13 @@ export default class Chess {
     });
   }
 
-  // Return which color is in check, if any (null otherwise)
   getPlayerInCheck() {
-    return ['white', 'black'].find((color) => {
-      const kingSpace = this.getBoard().findKing(color);
-      return kingSpace.isUnderThreat(this.getBoard());
-    });
+    return ['white', 'black'].find(color => this.playerIsInCheck(color));
   }
 
   playerIsInCheck(color) {
-    // TODO optimize
-    return this.getPlayerInCheck() === color;
+    const kingSpace = this.getBoard().findKing(color);
+    return kingSpace.isUnderThreat(this.getBoard());
   }
 
   getSpace(rank, file) {
