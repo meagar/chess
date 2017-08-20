@@ -4,54 +4,150 @@ import Board from '../src/board';
 const assert = require('assert');
 
 describe('board', () => {
-  function getBoard() {
-    const game = new Chess();
-    game.newGame();
-    return game.board;
+  function strToArr(str) {
+    return str.split('').map(x => (x === ' ' ? null : x));
   }
 
-  describe('#eachSpace', () => {
-    it('iterates over all the spaces, in order', () => {
-      let spaces = 0;
-      let labels = '';
+  function blankBoard() {
+    const NEW_BOARD = strToArr('rnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR');
+    return new Board(NEW_BOARD);
+  }
 
-      getBoard().eachSpace((space, label) => { spaces += 1; labels += label; });
-
-      assert.equal(spaces, 64);
-      assert.equal(labels, 'a8b8c8d8e8f8g8h8a7b7c7d7e7f7g7h7a6b6c6d6e6f6g6h6a5b5c5d5e5f5g5h5' +
-        'a4b4c4d4e4f4g4h4a3b3c3d3e3f3g3h3a2b2c2d2e2f2g2h2a1b1c1d1e1f1g1h1');
-    });
-  });
-
-  describe('#eachPiece', () => {
-    describe('with a color', () => {
-      it('iterates over all the pieces of the given color', () => {
-        const board = getBoard();
-
-        let pieces = '';
-        board.eachPiece('white', (piece) => { pieces += piece.ch; });
-        assert.equal(pieces, 'PPPPPPPPRNBQKBNR');
-
-        pieces = '';
-        board.eachPiece('black', (piece) => { pieces += piece.ch; });
-        assert.equal(pieces, 'rnbqkbnrpppppppp');
-      });
-    });
-
-    describe('without a color', () => {
-      it('iteates over all pieces', () => {
-        let pieces = '';
-        getBoard().eachPiece((piece) => { pieces += piece.ch; });
-        assert.equal(pieces, 'rnbqkbnrppppppppPPPPPPPPRNBQKBNR');
+  describe('#coordsToLabel', () => {
+    it('Returns the right label', () => {
+      const TESTS = { a8: [0, 0], d6: [3, 2], f1: [5, 7], h1: [7, 7] };
+      const board = new Board();
+      Object.keys(TESTS).forEach((label) => {
+        assert.equal(Board.coordsToLabel(...TESTS[label]), label);
       });
     });
   });
 
-  describe('#findKing', () => {
-    it('finds the right space for the given color', () => {
-      const board = getBoard();
-      assert.equal(board.findKing('white').getLabel(), 'e1');
-      assert.equal(board.findKing('black').getLabel(), 'e8');
+  describe('#labelToCoords', () => {
+    it('Returns the right coords', () => {
+      const TESTS = { a8: [0, 0], d6: [3, 2], f1: [5, 7], h1: [7, 7] };
+      const board = new Board();
+      Object.keys(TESTS).forEach((label) => {
+        assert.deepEqual(Board.labelToCoords(label), TESTS[label]);
+      });
+    });
+  });
+
+  describe('#getSpace', () => {
+    it('returns the right space', () => {
+      const board = blankBoard();
+      assert.equal(board.getSpace(3, 0), 'q');
+      assert.equal(board.getSpace(4, 0), 'k');
+      assert.equal(board.getSpace(2, 1), 'p');
+      assert.equal(board.getSpace(6, 6), 'P');
+      assert.equal(board.getSpace(3, 7), 'Q');
+      assert.equal(board.getSpace(4, 7), 'K');
+    });
+  });
+
+  describe('#setSpace', () => {
+    it('sets the space to the given piece', () => {
+      const board = blankBoard();
+      board.setSpace(0, 0, 'p');
+      assert.equal(board.getSpace(0, 0), 'p');
+      assert.deepEqual(board.getSpaces(), strToArr('pnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR'));
+      board.setSpace(5, 5, 'n');
+      assert.deepEqual(board.getSpaces(), strToArr('pnbqkbnrpppppppp                             n  PPPPPPPPRNBQKBNR'));
+    });
+  });
+
+  describe('a new board', () => {
+    function movesToArray(baseMove) {
+      const moveCoords = [];
+      let move = baseMove;
+      while (move) {
+        moveCoords.push([move.x, move.y]);
+        move = move.next;
+      }
+      return moveCoords;
+    }
+
+    it('has 64 spaces', () => {
+      assert.equal(new Board().getSpaces().length, 64);
+    });
+
+    context('pieces', () => {
+      function moves(label, piece) {
+        const board = blankBoard();
+        if (piece) {
+          board.setSpace(...Board.labelToCoords(label), piece);
+        }
+        return board.getMovesByLabel(label).reduce((arr, move) => {
+          do {
+            arr.push(move);
+            move = move.next;
+          } while (move);
+
+          return arr;
+        }, []).map(move => move.label).sort();
+      }
+
+      it('has moves for a pawn');
+
+      it('has moves for a rook', () => {
+        assert.deepEqual(moves('a1'), ['a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1']);
+        assert.deepEqual(moves('d4', 'r'), ['a4', 'b4', 'c4', 'd1', 'd2', 'd3', 'd5', 'd6', 'd7', 'd8', 'e4', 'f4', 'g4', 'h4']);
+      });
+
+      it('for a knight', () => {
+        assert.deepEqual(moves('b1'), ['a3', 'c3', 'd2']);
+        assert.deepEqual(moves('e5'), []);
+        assert.deepEqual(moves('e5', 'n'), ['c4', 'c6', 'd3', 'd7', 'f3', 'f7', 'g4', 'g6']);
+        assert.deepEqual(moves('e5', 'N'), ['c4', 'c6', 'd3', 'd7', 'f3', 'f7', 'g4', 'g6']);
+      });
+
     });
   });
 });
+
+//
+//   describe('#eachSpace', () => {
+//     it('iterates over all the spaces, in order', () => {
+//       let spaces = 0;
+//       let labels = '';
+//
+//       getBoard().eachSpace((space, label) => { spaces += 1; labels += label; });
+//
+//       assert.equal(spaces, 64);
+//       assert.equal(labels, 'a8b8c8d8e8f8g8h8a7b7c7d7e7f7g7h7a6b6c6d6e6f6g6h6a5b5c5d5e5f5g5h5' +
+//         'a4b4c4d4e4f4g4h4a3b3c3d3e3f3g3h3a2b2c2d2e2f2g2h2a1b1c1d1e1f1g1h1');
+//     });
+//   });
+//
+//   describe('#eachPiece', () => {
+//     describe('with a color', () => {
+//       it('iterates over all the pieces of the given color', () => {
+//         const board = getBoard();
+//
+//         let pieces = '';
+//         board.eachPiece('white', (piece) => { pieces += piece.ch; });
+//         assert.equal(pieces, 'PPPPPPPPRNBQKBNR');
+//
+//         pieces = '';
+//         board.eachPiece('black', (piece) => { pieces += piece.ch; });
+//         assert.equal(pieces, 'rnbqkbnrpppppppp');
+//       });
+//     });
+//
+//     describe('without a color', () => {
+//       it('iteates over all pieces', () => {
+//         let pieces = '';
+//         getBoard().eachPiece((piece) => { pieces += piece.ch; });
+//         assert.equal(pieces, 'rnbqkbnrppppppppPPPPPPPPRNBQKBNR');
+//       });
+//     });
+//   });
+//
+//   describe('#findKing', () => {
+//     it('finds the right space for the given color', () => {
+//       const board = getBoard();
+//       assert.equal(board.findKing('white').getLabel(), 'e1');
+//       assert.equal(board.findKing('black').getLabel(), 'e8');
+//     });
+//   });
+// });

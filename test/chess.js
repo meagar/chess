@@ -71,4 +71,19 @@ describe('chess', () => {
   describe('draws', () => {
     it('correctly reports draws');
   });
+
+  describe('Knight', () => {
+    context('starting position', () => {
+      it('produces the right moves', () => {
+        assert.deepEqual(getGame().getMoves('b1').sort(), ['a3', 'c3']);
+      });
+    });
+
+    context('from the middle of the board', () => {
+      it('produces the right moves', () => {
+        const game = getGame({ d4: 'N' });
+        assert.deepEqual(game.getMoves('d4').sort(), ['b3', 'b5', 'c2', 'c6', 'e2', 'e6', 'f3', 'f5']);
+      });
+    });
+  });
 });

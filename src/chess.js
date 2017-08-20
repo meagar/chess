@@ -67,7 +67,7 @@ export default class Chess {
 
   // space - A Space object or coords in the form 'c1'
   // piece - The piece to get moves for; null to use piece occupying space
-  getMoves(space, piece) {
+  getMoves(space, piece = null) {
     if (arguments.length === 1) {
       if (typeof space === 'string') {
         space = this.getSpace(space);
