@@ -1,46 +1,44 @@
 import Move from './move';
-
-import Piece from './piece';
-import Pawn from './pawn';
-import Rook from './rook';
-import Knight from './knight';
-import Bishop from './bishop';
-import Queen from './queen';
-import King from './king';
-
-import Space from './space';
+import PawnMove from './pawn_move';
 
 const ROW_LABELS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 const COL_LABELS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
-function buildPiece(ch) {
-  const classMap = {
-    p: Pawn, r: Rook, n: Knight, b: Bishop, q: Queen, k: King,
-  };
-
-  return new classMap[ch.toLowerCase()](ch);
-}
-
 const BLANK_BOARD = new Array(64);
+
+let moveCache;
 
 export default class Board {
   constructor(spaces = BLANK_BOARD) {
-    this._spaces = spaces;
-    this._moves = {};
+    this._spaces = spaces.slice(0 );
 
-    // Pregenerate moves for each piece at each space
-    for (let x = 0; x < 8; x += 1) {
-      this._moves[x] = {};
+    if (!moveCache) {
+      moveCache = {};
 
-      for (let y = 0; y < 8; y += 1) {
-        this._moves[x][y] = {
-          null: [],
-          r: this.generateRookMoves(x, y),
-          n: this.generateKnightMoves(x, y),
-        };
+      // Pregenerate moves for each piece at each space
+      for (let x = 0; x < 8; x += 1) {
+        moveCache[x] = {};
 
-        this._moves[x][y].N = this._moves[x][y].n;
-        this._moves[x][y].R = this._moves[x][y].r;
+        for (let y = 0; y < 8; y += 1) {
+          const moves = {
+            null: [],
+            p: Board.generatePawnMoves(x, y, false),
+            P: Board.generatePawnMoves(x, y, true),
+            r: Board.generateRookMoves(x, y),
+            n: Board.generateKnightMoves(x, y),
+            b: Board.generateBishopMoves(x, y),
+            q: Board.generateQueenMoves(x, y),
+            k: Board.generateKingMoves(x, y),
+          };
+
+          moves.R = moves.r;
+          moves.N = moves.n;
+          moves.B = moves.b;
+          moves.Q = moves.q;
+          moves.K = moves.k;
+
+          moveCache[x][y] = moves;
+        }
       }
     }
   }
@@ -58,14 +56,13 @@ export default class Board {
   }
 
   getMovesByCoords(x, y) {
-    return this._moves[x][y][this.getSpace(x, y) || null];
+    return moveCache[x][y][this.getSpace(x, y) || null];
   }
 
   move(xSrc, ySrc, xDest, yDest) {
-    if (arguments.length === 2) {
-      [xSrc, ySrc] = Board.labelToCoords(arguments[0]);
-      [xDest, yDest] = Board.labelToCoords(arguments[1]);
-    }
+    const piece = this.getSpace(xSrc, ySrc);
+    this.clearSpace(xSrc, ySrc);
+    this.setSpace(xDest, yDest, piece);
   }
 
   getSpace(x, y) {
@@ -74,6 +71,10 @@ export default class Board {
 
   setSpace(x, y, ch) {
     this._spaces[x + (y * 8)] = ch;
+  }
+
+  clearSpace(x, y) {
+    this._spaces[x + (y * 8)] = null;
   }
 
   restoreState(fenString) {
@@ -120,17 +121,78 @@ export default class Board {
     return fen.join('/');
   }
 
-  generateKnightMoves(x, y) {
+  static generatePawnMoves(x, y, white = true) {
+    const black = !white;
+    const moves = [];
+
+    const dy = (white ? -1 : 1);
+
+    if (y + dy >= 0 && y + dy <= 7) {
+      moves.push(new PawnMove(x, y + dy, null, false));
+    }
+
+    if ((white && y === 6) || (black && y === 1)) {
+      // We're on the home row, we can advance two spaces
+      new PawnMove(x, y + (2 * dy), moves[moves.length - 1], false);
+    }
+
+    // Captures
+    if (x > 1) {
+      moves.push(new PawnMove(x - 1, y + dy, null, true));
+    }
+
+    if (x < 7) {
+      moves.push(new PawnMove(x + 1, y + dy, null, true));
+    }
+
+    return moves;
+  }
+
+  static generateKnightMoves(x, y) {
     const deltas = [[1, 2], [-1, 2], [1, -2], [-1, -2], [2, 1], [2, -1], [-2, 1], [-2, -1]];
-    return deltas.map(delta => this.buildMove(x + delta[0], y + delta[1])).filter(s => s);
+    return this.deltasToMoves(x, y, deltas, { slide: false });
   }
 
-  generateRookMoves(x, y) {
+  static generateRookMoves(x, y) {
     const deltas = [[-1, 0], [0, -1], [1, 0], [0, 1]];
-    return deltas.map(delta => this.buildMoveList(x, y, ...delta)).filter(s => s);
+    return this.deltasToMoves(x, y, deltas, { slide: true });
   }
 
-  buildMoveList(x1, y1, dx, dy) {
+  static generateBishopMoves(x, y) {
+    const deltas = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    return this.deltasToMoves(x, y, deltas, { slide: true });
+  }
+
+  static generateQueenMoves(x, y) {
+    const deltas = [[-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [1, -1], [1, 1], [-1, 1]];
+    return this.deltasToMoves(x, y, deltas, { slide: true });
+  }
+
+  static generateKingMoves(x, y) {
+    const deltas = [[-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [1, -1], [1, 1], [-1, 1]];
+    return this.deltasToMoves(x, y, deltas, { slide: false });
+  }
+
+  // Turn a list of deltas into valid moves
+  // options:
+  //   class: The move class (Move or PawnMove)
+  //   slide: Whether to return a list of moves for each delta, sliding in the given direction
+  static deltasToMoves(x, y, deltas, options = {}) {
+    let moves = null;
+
+    if (options.slide) {
+      moves = deltas.map(d => this.buildSlideMove(x, y, ...d));
+    } else {
+      moves = deltas.map(d => this.buildMove(x + d[0], y + d[1], options.class));
+    }
+
+    // Either method may return `null` for moves that leave the board, filter them out
+    return moves.filter(m => m);
+  }
+
+  // Advance in the given direction until we run off the board
+  // Used for queens, rooks, bishops
+  static buildSlideMove(x1, y1, dx, dy) {
     let root = null;
     let prev = null;
 
@@ -143,11 +205,10 @@ export default class Board {
     return root;
   }
 
-  buildMove(x, y) {
-    if (x >= 0 && x < 7 && y > 0 && y < 8) {
-      return new Move(x, y);
-    }
-    return false;
+  // Generate a single move to the given x,y coords
+  // Used for Kings, Knights, Pawns
+  static buildMove(x, y, MoveClass = Move) {
+    return (x >= 0 && x < 7 && y > 0 && y < 8) && new MoveClass(x, y);
   }
 
   // getSpace(...args) {

@@ -1,5 +1,5 @@
 import Chess from '../src/chess';
-import Piece from '../src/piece';
+import Board from '../src/board';
 
 // Usage:
 // getGame() => new board in the default "new game" state
@@ -19,7 +19,7 @@ export default function getGame(state) {
   } else if (typeof state === 'object') {
     // key/value pairs
     Object.keys(state).forEach((key) => {
-      game.getSpace(key).setPiece(Chess.buildPiece(state[key]));
+      game.setPiece(...Board.labelToCoords(key), state[key]);
     });
   } else {
     throw new Error('Invalid argument to getGame');

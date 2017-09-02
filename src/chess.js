@@ -1,11 +1,3 @@
-import Piece from './piece';
-import Pawn from './pawn';
-import Rook from './rook';
-import Knight from './knight';
-import Bishop from './bishop';
-import Queen from './queen';
-import King from './king';
-import Space from './space';
 import Board from './board';
 
 const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -17,9 +9,9 @@ export default class Chess {
   constructor(whiteFn, blackFn) {
     this.ROW_LABELS = Board.ROW_LABELS;
     this.COL_LABELS = Board.COL_LABELS;
-    this.INITIAL_BOARD = INITIAL_BOARD;
+    //this.INITIAL_BOARD = INITIAL_BOARD;
 
-    this.board = new Board();
+    this._board = new Board();
 
     this.whiteFn = whiteFn;
     this.blackFn = blackFn;
@@ -45,7 +37,7 @@ export default class Chess {
   // Restore the game state from a FEN string
   restoreGame(fenString) {
     const parts = fenString.split(' ');
-    this.board.restoreState(parts[0]);
+    this._board.restoreState(parts[0]);
     this._currentTurn = parts[1] === 'w' ? 'white' : 'black';
 
     this._restoreCastling(parts[2]);
@@ -56,7 +48,7 @@ export default class Chess {
 
   // Produce a FEN string for the current game state
   persistGame() {
-    const state = [this.board.persistState()];
+    const state = [this._board.persistState()];
     state.push(this.getCurrentTurn() === 'white' ? 'w' : 'b');
     state.push(this._persistCastling());
     state.push(this._persistEnPassant());
@@ -65,24 +57,29 @@ export default class Chess {
     return state.join(' ');
   }
 
-  // space - A Space object or coords in the form 'c1'
-  // piece - The piece to get moves for; null to use piece occupying space
-  getMoves(space, piece = null) {
-    if (arguments.length === 1) {
-      if (typeof space === 'string') {
-        space = this.getSpace(space);
-      }
-      if (!piece && arguments.length === 1) {
-        piece = space.getPiece();
-      }
-    }
+  setPiece(x, y, ch) {
+    this._board.setSpace(x, y, ch);
+  }
 
-    return piece.getMoves(space, this.getBoard());
+  getMoves(x, y) {
+    const potentialMoves = this._board.getMovesByCoords(x, y);
+    const moves = [];
+
+    potentialMoves.forEach((move) => {
+      if (move.capture) {
+
+      }
+
+      moves.push(move);
+
+    });
   }
 
   // Returns a promise
-  move(from, to, options = {}) {
-    const fromSpace = this.board.getSpace(from);
+  move(fromX, fromY, toX, toY, options = {}) {
+    return this.board.move(fromX, fromY, toX, toY);
+
+    const fromSpace = this.board.getSpace
     const toSpace = this.board.getSpace(to);
     const piece = fromSpace.getPiece();
 

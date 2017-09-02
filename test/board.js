@@ -78,29 +78,53 @@ describe('board', () => {
           board.setSpace(...Board.labelToCoords(label), piece);
         }
         return board.getMovesByLabel(label).reduce((arr, move) => {
+          // Turn the moves from a linked list into a flat array
           do {
             arr.push(move);
             move = move.next;
           } while (move);
 
           return arr;
-        }, []).map(move => move.label).sort();
+        }, []).map(move => move.label + (move.capture ? 'c' : '')).sort();
       }
 
-      it('has moves for a pawn');
+      it('has moves for a pawn', () => {
+        assert.deepEqual(moves('d2'), ['c3c', 'd3', 'd4', 'e3c']);
+        assert.deepEqual(moves('e7'), ['d6c', 'e5', 'e6', 'f6c']);
 
-      it('has moves for a rook', () => {
-        assert.deepEqual(moves('a1'), ['a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1']);
-        assert.deepEqual(moves('d4', 'r'), ['a4', 'b4', 'c4', 'd1', 'd2', 'd3', 'd5', 'd6', 'd7', 'd8', 'e4', 'f4', 'g4', 'h4']);
+        assert.deepEqual(moves('f6', 'P'), ['e7c', 'f7', 'g7c']);
       });
 
-      it('for a knight', () => {
+      it('has moves for a rook', () => {
+        assert.deepEqual(moves('a1'), ['a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8',
+          'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1']);
+        assert.deepEqual(moves('d4', 'r'), ['a4', 'b4', 'c4', 'd1', 'd2', 'd3', 'd5', 'd6', 'd7', 'd8',
+          'e4', 'f4', 'g4', 'h4']);
+        assert.deepEqual(moves('d4', 'R'), ['a4', 'b4', 'c4', 'd1', 'd2', 'd3', 'd5', 'd6', 'd7', 'd8',
+          'e4', 'f4', 'g4', 'h4']);
+      });
+
+      it('has moves for a knight', () => {
         assert.deepEqual(moves('b1'), ['a3', 'c3', 'd2']);
-        assert.deepEqual(moves('e5'), []);
         assert.deepEqual(moves('e5', 'n'), ['c4', 'c6', 'd3', 'd7', 'f3', 'f7', 'g4', 'g6']);
         assert.deepEqual(moves('e5', 'N'), ['c4', 'c6', 'd3', 'd7', 'f3', 'f7', 'g4', 'g6']);
       });
 
+      it('has moves for a bishop', () => {
+        assert.deepEqual(moves('c1'), ['a3', 'b2', 'd2', 'e3', 'f4', 'g5', 'h6']);
+        assert.deepEqual(moves('e6', 'b'), ['a2', 'b3', 'c4', 'c8', 'd5', 'd7', 'f5', 'f7', 'g4', 'g8', 'h3']);
+      });
+
+      it('has moves for a queen', () => {
+        assert.deepEqual(moves('d1'), ['a1', 'a4', 'b1', 'b3', 'c1', 'c2', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8',
+          'e1', 'e2', 'f1', 'f3', 'g1', 'g4', 'h1', 'h5']);
+      });
+
+      it('has moves for a king', () => {
+        assert.deepEqual(moves('e1'), ['d1', 'd2', 'e2', 'f1', 'f2']);
+        assert.deepEqual(moves('c4', 'k'), ['b3', 'b4', 'b5', 'c3', 'c5', 'd3', 'd4', 'd5']);
+        assert.deepEqual(moves('c4', 'K'), ['b3', 'b4', 'b5', 'c3', 'c5', 'd3', 'd4', 'd5']);
+      });
     });
   });
 });
