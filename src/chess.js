@@ -1,33 +1,35 @@
 import Board from './board';
 
-const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-// A board where the king is in check
-// const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
+// const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+// Pawn capture test
+// const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/2pp7/3P7/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+// A board where the king can move into check
+const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1';
 // const INITIAL_BOARD = 'rnbqkbnr/2ppppp1/pp5p/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1';
 
 export default class Chess {
   constructor(whiteFn, blackFn) {
     this.ROW_LABELS = Board.ROW_LABELS;
     this.COL_LABELS = Board.COL_LABELS;
-    //this.INITIAL_BOARD = INITIAL_BOARD;
 
+    this._boardStates = [];
     this._board = new Board();
 
     this.whiteFn = whiteFn;
     this.blackFn = blackFn;
 
-    this._currentTurn = 'white';
+    this._currentTurnWhite = true; // white
   }
-
-  run() {
-    for (;;) {
-      const callback = (this._currentTurn === 'white' ? this.whiteFn : this.blackFn);
-
-      callback(this).then((move) => {
-
-      });
-    }
-  }
+  
+  // run() {
+  //   for (;;) {
+  //     const callback = (this._currentTurnWhite ? this.whiteFn : this.blackFn);
+  //
+  //     callback(this).then((move) => {
+  //
+  //     });
+  //   }
+  // }
 
   newGame() {
     this.restoreGame(INITIAL_BOARD);
@@ -37,8 +39,8 @@ export default class Chess {
   // Restore the game state from a FEN string
   restoreGame(fenString) {
     const parts = fenString.split(' ');
-    this._board.restoreState(parts[0]);
-    this._currentTurn = parts[1] === 'w' ? 'white' : 'black';
+    this._board = Board.restoreState(parts[0]);
+    this._currentTurnWhite = parts[1] === 'w';
 
     this._restoreCastling(parts[2]);
     this._restoreEnPassant(parts[3]);
@@ -48,7 +50,7 @@ export default class Chess {
 
   // Produce a FEN string for the current game state
   persistGame() {
-    const state = [this._board.persistState()];
+    const state = [this.getBoard().persistState()];
     state.push(this.getCurrentTurn() === 'white' ? 'w' : 'b');
     state.push(this._persistCastling());
     state.push(this._persistEnPassant());
@@ -57,66 +59,84 @@ export default class Chess {
     return state.join(' ');
   }
 
-  setPiece(x, y, ch) {
-    this._board.setSpace(x, y, ch);
+  getPiece(label) {
+    return this.getBoard().getSpace(...Board.labelToCoords(label));
   }
 
-  getMoves(x, y) {
-    const potentialMoves = this._board.getMovesByCoords(x, y);
-    const moves = [];
+  // setPiece(x, y, ch) {
+  //   this.getBoard().setSpace(x, y, ch);
+  // }
 
-    potentialMoves.forEach((move) => {
-      if (move.capture) {
+  getMoves(label) {
+    const moves = this.getBoard().getMoves(...Board.labelToCoords(label));
 
-      }
-
-      moves.push(move);
-
+    moves.forEach((move) => {
+      move.label = Board.coordsToLabel(move.x, move.y);
     });
+
+    return moves;
   }
 
   // Returns a promise
-  move(fromX, fromY, toX, toY, options = {}) {
-    return this.board.move(fromX, fromY, toX, toY);
+  move(from, to, options = {}) {
+    const [fromX, fromY] = Board.labelToCoords(from);
+    const [toX, toY] = Board.labelToCoords(to);
 
-    const fromSpace = this.board.getSpace
-    const toSpace = this.board.getSpace(to);
-    const piece = fromSpace.getPiece();
+    // Sanity check and error-raising
+    const piece = this.getBoard().getSpace(fromX, fromY);
 
-    if (piece.getColor() !== this.getCurrentTurn()) {
-      throw new Error(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
+    if (Board.isWhite(piece) !== this._currentTurnWhite) {
+      throw new Error('Invalid move: Wrong piece color');
     }
 
-    if (this._canMove(fromSpace, toSpace, piece, options)) {
-      // Make sure we can legally move to the target space
-      const capture = toSpace.getPiece();
-      toSpace.setPiece(piece);
-      fromSpace.clearPiece();
-
-      let moved;
-
-      if (piece.canPromote && piece.canPromote(toSpace)) {
-        moved = new Promise((resolve, reject) => {
-          options.promote(toSpace).then((ch) => {
-            // Promoted
-            const newPiece = Chess.buildPiece(toSpace.getPiece().white() ? ch.toUpperCase() : ch.toLowerCase());
-            toSpace.setPiece(newPiece);
-            resolve();
-          }, () => {
-            // Promotion cancelled
-            toSpace.setPiece(capture);
-            fromSpace.setPiece(piece);
-            reject('Move cancelled by user');
-          });
-        });
-      } else {
-        moved = Promise.resolve();
-      }
-
-      return moved.then(() => { this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black'; });
+    if (!this.getMoves(from).find(m => m.x === toX && m.y === toY)) {
+      throw new Error("Invalid move: Can't move there");
     }
 
-    return Promise.reject('Illegal move');
+    this._boardStates.push(this._board);
+    this._board = this._board.move(fromX, fromY, toX, toY);
+
+    this._currentTurnWhite = !this._currentTurnWhite;
+
+    return Promise.resolve();
+
+    // const fromSpace = this.board.getSpace
+    // const toSpace = this.board.getSpace(to);
+    // const piece = fromSpace.getPiece();
+    //
+    // if (piece.getColor() !== this.getCurrentTurn()) {
+    //   throw new Error(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
+    // }
+    //
+    // if (this._canMove(fromSpace, toSpace, piece, options)) {
+    //   // Make sure we can legally move to the target space
+    //   const capture = toSpace.getPiece();
+    //   toSpace.setPiece(piece);
+    //   fromSpace.clearPiece();
+    //
+    //   let moved;
+    //
+    //   if (piece.canPromote && piece.canPromote(toSpace)) {
+    //     moved = new Promise((resolve, reject) => {
+    //       options.promote(toSpace).then((ch) => {
+    //         // Promoted
+    //         const newPiece = Chess.buildPiece(toSpace.getPiece().white() ? ch.toUpperCase() : ch.toLowerCase());
+    //         toSpace.setPiece(newPiece);
+    //         resolve();
+    //       }, () => {
+    //         // Promotion cancelled
+    //         toSpace.setPiece(capture);
+    //         fromSpace.setPiece(piece);
+    //         reject('Move cancelled by user');
+    //       });
+    //     });
+    //   } else {
+    //     moved = Promise.resolve();
+    //   }
+    //
+    //   return moved.then(() => { this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black'; });
+    // }
+    // return Promise.reject('Illegal move');
   }
 
   _canMove(fromSpace, toSpace, piece, options) {
@@ -141,12 +161,13 @@ export default class Chess {
   }
 
   getWinner() {
-    const color = this.getPlayerInCheck();
-
-    // Figure out if either player is in check, and if that player can escape it
-    this.board.eachPiece(color, (piece, space) => {
-      this.getMoves(space, piece);
-    });
+    return null;
+    // const color = this.getPlayerInCheck();
+    //
+    // // Figure out if either player is in check, and if that player can escape it
+    // this.board.eachPiece(color, (piece, space) => {
+    //   this.getMoves(space, piece);
+    // });
   }
 
   getPlayerInCheck() {
@@ -154,6 +175,7 @@ export default class Chess {
   }
 
   playerIsInCheck(color) {
+    return false;
     const kingSpace = this.getBoard().findKing(color);
     return kingSpace.isUnderThreat(this.getBoard());
   }
@@ -166,11 +188,26 @@ export default class Chess {
   }
 
   getBoard() {
-    return this.board;
+    return this._board;
   }
 
   getCurrentTurn() {
-    return this._currentTurn;
+    return this._currentTurnWhite ? 'white' : 'black';
+  }
+
+  eachSpace(callback) {
+    this.getBoard().eachSpace((x, y, ch) => {
+      callback(Board.coordsToLabel(x, y), ch);
+    });
+  }
+
+  static getPieceColor(ch) {
+    return Board.isWhite(ch) ? 'white' : 'black';
+  }
+
+  static getSpaceColor(ch) {
+    const [x, y] = Board.labelToCoords(ch);
+    return Board.getSpaceColor(x, y);
   }
 
   //
@@ -221,16 +258,3 @@ if (typeof window !== 'undefined') {
 } else if (typeof exports !== 'undefined') {
   exports.Chess = Chess;
 }
-
-Chess.buildPiece = function (ch) {
-  const Klass = {
-    p: Pawn,
-    n: Knight,
-    b: Bishop,
-    r: Rook,
-    q: Queen,
-    k: King,
-  }[ch.toLowerCase()];
-
-  return new Klass(ch);
-};

@@ -10,35 +10,39 @@ let moveCache;
 
 export default class Board {
   constructor(spaces = BLANK_BOARD) {
-    this._spaces = spaces.slice(0 );
+    this._spaces = spaces.slice(0);
 
-    if (!moveCache) {
-      moveCache = {};
+    Board.buildMoveCache();
+  }
 
-      // Pregenerate moves for each piece at each space
-      for (let x = 0; x < 8; x += 1) {
-        moveCache[x] = {};
+  static buildMoveCache() {
+    if (moveCache) { return; }
 
-        for (let y = 0; y < 8; y += 1) {
-          const moves = {
-            null: [],
-            p: Board.generatePawnMoves(x, y, false),
-            P: Board.generatePawnMoves(x, y, true),
-            r: Board.generateRookMoves(x, y),
-            n: Board.generateKnightMoves(x, y),
-            b: Board.generateBishopMoves(x, y),
-            q: Board.generateQueenMoves(x, y),
-            k: Board.generateKingMoves(x, y),
-          };
+    moveCache = {};
 
-          moves.R = moves.r;
-          moves.N = moves.n;
-          moves.B = moves.b;
-          moves.Q = moves.q;
-          moves.K = moves.k;
+    // Pregenerate moves for each piece at each space
+    for (let x = 0; x < 8; x += 1) {
+      moveCache[x] = {};
 
-          moveCache[x][y] = moves;
-        }
+      for (let y = 0; y < 8; y += 1) {
+        const moves = {
+          null: [],
+          p: Board.generatePawnMoves(x, y, false),
+          P: Board.generatePawnMoves(x, y, true),
+          r: Board.generateRookMoves(x, y),
+          n: Board.generateKnightMoves(x, y),
+          b: Board.generateBishopMoves(x, y),
+          q: Board.generateQueenMoves(x, y),
+          k: Board.generateKingMoves(x, y),
+        };
+
+        moves.R = moves.r;
+        moves.N = moves.n;
+        moves.B = moves.b;
+        moves.Q = moves.q;
+        moves.K = moves.k;
+
+        moveCache[x][y] = moves;
       }
     }
   }
@@ -51,6 +55,23 @@ export default class Board {
     return COL_LABELS[x] + ROW_LABELS[y];
   }
 
+  static getSpaceColor(x, y) {
+    return ((x + y) % 2) === 0 ? 'white' : 'black';
+  }
+
+  // Returns true if white, false if black
+  static isWhite(ch) {
+    if (ch === 'P' || ch === 'R' || ch === 'N' || ch === 'B' || ch === 'Q' || ch === 'K') {
+      return true;
+    }
+
+    if (ch === 'p' || ch === 'r' || ch === 'n' || ch === 'b' || ch === 'q' || ch === 'k') {
+      return false;
+    }
+
+    throw new Error(`Invalid piece in isWhite: ${ch}`);
+  }
+
   getMovesByLabel(label) {
     return this.getMovesByCoords(...Board.labelToCoords(label));
   }
@@ -59,25 +80,82 @@ export default class Board {
     return moveCache[x][y][this.getSpace(x, y) || null];
   }
 
-  move(xSrc, ySrc, xDest, yDest) {
-    const piece = this.getSpace(xSrc, ySrc);
-    this.clearSpace(xSrc, ySrc);
-    this.setSpace(xDest, yDest, piece);
+  // Return a list of moves for the piece at (x, y)
+  getMoves(x, y) {
+    const moves = [];
+    const piece = this.getSpace(x, y);
+    const white = Board.isWhite(piece);
+
+    // Potential moves are the cached list of possible moves for the given piece at the given location
+    const potentialMoves = this.getMovesByCoords(x, y);
+
+    // We need to filter them down to the moves that are valid in the given board state
+    potentialMoves.forEach((move) => {
+      if (move.capture === true) {
+        // Pawn capture
+        const dest = this.getSpace(move.x, move.y);
+        if (dest) {
+          if (Board.isWhite(dest) !== white) {
+            // Destination is occupied by opposite color
+            moves.push({ x: move.x, y: move.y, capture: true });
+          }
+        }
+      } else if (move.capture === false) {
+        // Pawn move that cannot capture
+        const dest = this.getSpace(move.x, move.y);
+        if (!dest) {
+          moves.push({ x: move.x, y: move.y, capture: false });
+        }
+      } else {
+        // Regular move (possibly a slide move)
+        // Return moves until no more moves in this direction, *or* we encounter a blocked space
+        do {
+          const dest = this.getSpace(move.x, move.y);
+
+          if (dest) {
+            // Space is occupied
+            if (Board.isWhite(dest) !== white) {
+              moves.push({ x: move.x, y: move.y, capture: true });
+            }
+            move = null;
+          } else {
+            // Space is empty, we can freely move here
+            moves.push({ x: move.x, y: move.y, capture: false });
+            move = move.next;
+          }
+        } while (move);
+      }
+    });
+
+    return moves;
+  }
+
+  // Return a new board with the given move applied
+  move(x1, y1, x2, y2) {
+    const newBoard = new Board(this._spaces);
+    const piece = newBoard.getSpace(x1, y1);
+    /* eslint-disable no-underscore-dangle */
+    newBoard._setSpace(x2, y2, piece);
+    newBoard._clearSpace(x1, y1);
+
+    return newBoard;
   }
 
   getSpace(x, y) {
     return this._spaces[x + (y * 8)];
   }
 
-  setSpace(x, y, ch) {
+  _setSpace(x, y, ch) {
     this._spaces[x + (y * 8)] = ch;
   }
 
-  clearSpace(x, y) {
+  _clearSpace(x, y) {
     this._spaces[x + (y * 8)] = null;
   }
 
-  restoreState(fenString) {
+  static restoreState(fenString) {
+    const board = new Board();
+
     const nullArray = function (n) {
       const arr = [];
       for (let i = 0; i < n; i += 1) {
@@ -93,17 +171,19 @@ export default class Board {
 
       row.forEach((col, colIndex) => {
         if (col) {
-          this.setSpace(rowIndex, colIndex, col);
+          board._setSpace(colIndex, rowIndex, col);
         }
       });
     });
+
+    return board;
   }
 
   persistState() {
     const fen = [];
-    for (let x = 0; x < 8; x += 1) {
+    for (let y = 0; y < 8; y += 1) {
       const row = [];
-      for (let y = 0; y < 8; y += 1) {
+      for (let x = 0; x < 8; x += 1) {
         const ch = this.getSpace(x, y);
         if (!ch) {
           if (typeof row[row.length - 1] === 'number') {
@@ -133,6 +213,7 @@ export default class Board {
 
     if ((white && y === 6) || (black && y === 1)) {
       // We're on the home row, we can advance two spaces
+      /* eslint-disable no-new */
       new PawnMove(x, y + (2 * dy), moves[moves.length - 1], false);
     }
 
@@ -208,7 +289,7 @@ export default class Board {
   // Generate a single move to the given x,y coords
   // Used for Kings, Knights, Pawns
   static buildMove(x, y, MoveClass = Move) {
-    return (x >= 0 && x < 7 && y > 0 && y < 8) && new MoveClass(x, y);
+    return (x >= 0 && x < 8 && y > 0 && y < 8) && new MoveClass(x, y);
   }
 
   // getSpace(...args) {
@@ -234,7 +315,7 @@ export default class Board {
   eachSpace(callback) {
     for (let x = 0; x < 8; x += 1) {
       for (let y = 0; y < 8; y += 1) {
-        callback(this.getSpace(x, y), x, y);
+        callback(x, y, this.getSpace(x, y));
       }
     }
   }

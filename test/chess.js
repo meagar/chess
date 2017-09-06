@@ -1,37 +1,51 @@
 import Chess from '../src/chess';
 import Board from '../src/board';
-import getGame from './helper';
+import h from './helper';
 
 const assert = require('assert');
 
 describe('chess', () => {
   describe('A new game', () => {
     it('should serialize to the initial state', () => {
-      assert.equal(getGame().persistGame(), 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      assert.equal(h.getGame().persistGame(), 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    });
+  });
+
+  describe('#getMoves', () => {
+    it('should include captures for a pawn', () => {
+      const game = h.getGame({ e3: 'P', d4: 'n' });
+      assert.deepEqual(h.getMoves(game, 'e3'), ['d4c', 'e4']);
     });
 
-    it('should return a list of moves for a given space', () => {
-      const game = getGame({e3: 'P', d4: 'n'});
-      assert.equal(game.getMoves(...Board.labelToCoords('e3')), 'd4', 'e4');
+    it('should jump over pieces for a knight', () => {
+      const game = h.getGame({ c3: 'P', c4: 'P', c5: 'P', d4: 'n' });
+      assert.deepEqual(h.getMoves(game, 'd4'), ['b3', 'b5', 'c2', 'c6', 'e2', 'e6', 'f3', 'f5']);
     });
 
-    it('should accept moves'/*, () => {
-      const game = getGame();
+    it('should slide until a capture or blocked space for a rook', () => {
+      const game = h.getGame({ g2: 'R', g5: 'p' });
+      assert.deepEqual(h.getMoves(game, 'g2'), ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g1', 'g3', 'g4', 'g5c', 'h2']);
+    });
+  });
+
+  describe('#move', () => {
+    it('should accept valid moves', () => {
+      const game = h.getGame();
       const b1 = Board.labelToCoords('b1');
       const a3 = Board.labelToCoords('a3');
 
-      return game.move(b1, a3).then(() => {
+      return game.move(...b1, ...a3).then(() => {
         assert.equal(game.persistGame(), 'rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - 0 1');
       });
-    }*/);
+    });
   });
 
   describe('#setPiece', () => {
     it('sets the piece at the given coords', () => {
-      const game = getGame();
+      const game = h.getGame();
       game.setPiece(1, 1, 'N');
       assert.equal(game.persistGame(), 'rnbqkbnr/pNpppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-    })
+    });
   });
 
   describe('en passant', () => {

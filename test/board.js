@@ -56,6 +56,30 @@ describe('board', () => {
     });
   });
 
+  describe('#isWhite', () => {
+    it('returns true for white pieces', () => {
+      assert.equal(Board.isWhite('P'), true);
+      assert.equal(Board.isWhite('R'), true);
+      assert.equal(Board.isWhite('N'), true);
+      assert.equal(Board.isWhite('B'), true);
+      assert.equal(Board.isWhite('Q'), true);
+      assert.equal(Board.isWhite('K'), true);
+    });
+
+    it('returns false for black pieces', () => {
+      assert.equal(Board.isWhite('p'), false);
+      assert.equal(Board.isWhite('r'), false);
+      assert.equal(Board.isWhite('n'), false);
+      assert.equal(Board.isWhite('b'), false);
+      assert.equal(Board.isWhite('q'), false);
+      assert.equal(Board.isWhite('k'), false);
+    });
+
+    it('raises an error on other values', () => {
+      assert.throws(() => { Board.isWhite('f'); });
+    });
+  });
+
   describe('a new board', () => {
     function movesToArray(baseMove) {
       const moveCoords = [];
@@ -106,6 +130,7 @@ describe('board', () => {
 
       it('has moves for a knight', () => {
         assert.deepEqual(moves('b1'), ['a3', 'c3', 'd2']);
+        assert.deepEqual(moves('g1'), ['e2', 'f3', 'h3']);
         assert.deepEqual(moves('e5', 'n'), ['c4', 'c6', 'd3', 'd7', 'f3', 'f7', 'g4', 'g6']);
         assert.deepEqual(moves('e5', 'N'), ['c4', 'c6', 'd3', 'd7', 'f3', 'f7', 'g4', 'g6']);
       });
