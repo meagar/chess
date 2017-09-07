@@ -7,8 +7,8 @@ describe('Pawn', () => {
   describe('starting position', () => {
     context('when the way is clear', () => {
       it('should be able to advance two ranks from its starting row', () => {
-        assert.deepEqual(h.getGame().getMoves('c2').sort(), ['c3', 'c4']);
-        assert.deepEqual(h.getGame().getMoves('e2').sort(), ['e3', 'e4']);
+        assert.deepEqual(h.getGame().getMoves('c2').sort().map(m => m.label), ['c3', 'c4']);
+        assert.deepEqual(h.getGame().getMoves('e2').sort().map(m => m.label), ['e3', 'e4']);
       });
     });
 

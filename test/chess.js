@@ -31,10 +31,8 @@ describe('chess', () => {
   describe('#move', () => {
     it('should accept valid moves', () => {
       const game = h.getGame();
-      const b1 = Board.labelToCoords('b1');
-      const a3 = Board.labelToCoords('a3');
 
-      return game.move(...b1, ...a3).then(() => {
+      return game.move('b1', 'a3').then(() => {
         assert.equal(game.persistGame(), 'rnbqkbnr/pppppppp/8/8/8/N7/PPPPPPPP/R1BQKBNR b KQkq - 0 1');
       });
     });
@@ -43,7 +41,7 @@ describe('chess', () => {
   describe('#setPiece', () => {
     it('sets the piece at the given coords', () => {
       const game = h.getGame();
-      game.setPiece(1, 1, 'N');
+      game.setPiece('b7', 'N');
       assert.equal(game.persistGame(), 'rnbqkbnr/pNpppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     });
   });

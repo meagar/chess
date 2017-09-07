@@ -72,12 +72,8 @@ export default class Board {
     throw new Error(`Invalid piece in isWhite: ${ch}`);
   }
 
-  getMovesByLabel(label) {
-    return this.getMovesByCoords(...Board.labelToCoords(label));
-  }
-
-  getMovesByCoords(x, y) {
-    return moveCache[x][y][this.getSpace(x, y) || null];
+  static getCachedMoves(x, y, piece) {
+    return moveCache[x][y][piece];
   }
 
   // Return a list of moves for the piece at (x, y)
@@ -87,7 +83,7 @@ export default class Board {
     const white = Board.isWhite(piece);
 
     // Potential moves are the cached list of possible moves for the given piece at the given location
-    const potentialMoves = this.getMovesByCoords(x, y);
+    const potentialMoves = Board.getCachedMoves(x, y, piece);
 
     // We need to filter them down to the moves that are valid in the given board state
     potentialMoves.forEach((move) => {
@@ -143,6 +139,12 @@ export default class Board {
 
   getSpace(x, y) {
     return this._spaces[x + (y * 8)];
+  }
+
+  setSpace(x, y, ch) {
+    const newBoard = new Board(this._spaces);
+    newBoard._setSpace(x, y, ch);
+    return newBoard;
   }
 
   _setSpace(x, y, ch) {

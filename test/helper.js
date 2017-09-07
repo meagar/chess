@@ -19,7 +19,7 @@ exports.getGame = function (state) {
   } else if (typeof state === 'object') {
     // key/value pairs
     Object.keys(state).forEach((key) => {
-      game.setPiece(...Board.labelToCoords(key), state[key]);
+      game.setPiece(key, state[key]);
     });
   } else {
     throw new Error('Invalid argument to getGame');
@@ -32,7 +32,7 @@ exports.getGame = function (state) {
 // Returns a list of moves in the form ['a3', 'b4', 'd4c'] etc, where 'c' denotes a capture
 // Move labels are always returned in sorted order
 exports.getMoves = function (game, spaceLabel) {
-  const moves = game.getMoves(...Board.labelToCoords(spaceLabel));
+  const moves = game.getMoves(spaceLabel);
   return moves.map((move) => {
     return Board.coordsToLabel(move.x, move.y) + (move.capture ? 'c' : '');
   }).sort();

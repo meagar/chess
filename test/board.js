@@ -45,13 +45,14 @@ describe('board', () => {
     });
   });
 
-  describe('#setSpace', () => {
+  describe('#_setSpace', () => {
     it('sets the space to the given piece', () => {
+      /* eslint-disable no-underscore-dangle */
       const board = blankBoard();
-      board.setSpace(0, 0, 'p');
+      board._setSpace(0, 0, 'p');
       assert.equal(board.getSpace(0, 0), 'p');
       assert.deepEqual(board.getSpaces(), strToArr('pnbqkbnrpppppppp                                PPPPPPPPRNBQKBNR'));
-      board.setSpace(5, 5, 'n');
+      board._setSpace(5, 5, 'n');
       assert.deepEqual(board.getSpaces(), strToArr('pnbqkbnrpppppppp                             n  PPPPPPPPRNBQKBNR'));
     });
   });
@@ -98,10 +99,14 @@ describe('board', () => {
     context('pieces', () => {
       function moves(label, piece) {
         const board = blankBoard();
+        const coords = Board.labelToCoords(label);
         if (piece) {
-          board.setSpace(...Board.labelToCoords(label), piece);
+          board._setSpace(...coords, piece);
+        } else {
+          piece = board.getSpace(...coords);
         }
-        return board.getMovesByLabel(label).reduce((arr, move) => {
+
+        return Board.getCachedMoves(...coords, piece).reduce((arr, move) => {
           // Turn the moves from a linked list into a flat array
           do {
             arr.push(move);
