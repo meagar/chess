@@ -4,7 +4,7 @@ const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 // Pawn capture test
 // const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/2pp7/3P7/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 // A board where the king can move into check
-//const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1';
+// const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1';
 // const INITIAL_BOARD = 'rnbqkbnr/2ppppp1/pp5p/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1';
 
 export default class Chess {
@@ -70,11 +70,14 @@ export default class Chess {
   getMoves(label) {
     const moves = this.getBoard().getMoves(...Board.labelToCoords(label));
 
-    moves.forEach((move) => {
-      move.label = Board.coordsToLabel(move.x, move.y);
+    return moves.map((m) => {
+      return {
+        from: label,
+        to: Board.coordsToLabel(m.x, m.y),
+        capture: m.capture === true,
+        promote: m.promote === true,
+      };
     });
-
-    return moves;
   }
 
   // Returns a promise
@@ -89,8 +92,8 @@ export default class Chess {
       throw new Error('Invalid move: Wrong piece color');
     }
 
-    if (!this.getMoves(from).find(m => m.x === toX && m.y === toY)) {
-      throw new Error("Invalid move: Can't move there");
+    if (!this.getMoves(from).find(m => m.to === to)) {
+      throw new Error(`Invalid move: Can't move from ${from} to ${to}`);
     }
 
     this._boardStates.push(this._board);
@@ -176,8 +179,8 @@ export default class Chess {
 
   playerIsInCheck(color) {
     return false;
-    const kingSpace = this.getBoard().findKing(color);
-    return kingSpace.isUnderThreat(this.getBoard());
+    // const kingSpace = this.getBoard().findKing(color);
+    // return kingSpace.isUnderThreat(this.getBoard());
   }
 
   getSpace(rank, file) {

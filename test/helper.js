@@ -28,12 +28,9 @@ exports.getGame = function (state) {
   return game;
 };
 
-// Turns labels ('d3') into coords([3, 5]) for both input and output
-// Returns a list of moves in the form ['a3', 'b4', 'd4c'] etc, where 'c' denotes a capture
+// Returns a list of moves in the form ['a3', 'b4', 'd4c'] etc, where 'c' denotes a capture.
 // Move labels are always returned in sorted order
 exports.getMoves = function (game, spaceLabel) {
   const moves = game.getMoves(spaceLabel);
-  return moves.map((move) => {
-    return Board.coordsToLabel(move.x, move.y) + (move.capture ? 'c' : '');
-  }).sort();
+  return moves.map(move => move.to + (move.capture ? 'c' : '')).sort();
 };

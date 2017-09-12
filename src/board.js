@@ -78,12 +78,20 @@ export default class Board {
 
   // Return a list of moves for the piece at (x, y)
   getMoves(x, y) {
-    const moves = [];
     const piece = this.getSpace(x, y);
     const white = Board.isWhite(piece);
 
     // Potential moves are the cached list of possible moves for the given piece at the given location
     const potentialMoves = Board.getCachedMoves(x, y, piece);
+
+    if (piece === 'p' || piece === 'P') {
+      return this._getPawnMoves(x, y, potentialMoves, piece, white);
+    }
+    return this._getNonPawnMoves(x, y, potentialMoves, piece, white);
+  }
+
+  _getPawnMoves(x, y, potentialMoves, piece, white) {
+    const moves = [];
 
     // We need to filter them down to the moves that are valid in the given board state
     potentialMoves.forEach((move) => {
@@ -93,34 +101,53 @@ export default class Board {
         if (dest) {
           if (Board.isWhite(dest) !== white) {
             // Destination is occupied by opposite color
-            moves.push({ x: move.x, y: move.y, capture: true });
+            moves.push({ x: move.x, y: move.y, capture: true, promotion: move.promotion });
           }
-        }
-      } else if (move.capture === false) {
-        // Pawn move that cannot capture
-        const dest = this.getSpace(move.x, move.y);
-        if (!dest) {
-          moves.push({ x: move.x, y: move.y, capture: false });
         }
       } else {
-        // Regular move (possibly a slide move)
-        // Return moves until no more moves in this direction, *or* we encounter a blocked space
+        // Pawn move that cannot capture
         do {
           const dest = this.getSpace(move.x, move.y);
-
-          if (dest) {
-            // Space is occupied
-            if (Board.isWhite(dest) !== white) {
-              moves.push({ x: move.x, y: move.y, capture: true });
-            }
-            move = null;
+          if (!dest) {
+            // The space is clear, we can advance here
+            moves.push({ x: move.x, y: move.y, capture: false, promotion: move.promotion });
           } else {
-            // Space is empty, we can freely move here
-            moves.push({ x: move.x, y: move.y, capture: false });
-            move = move.next;
+            // The space was blocked, we can't advance, and we should stop checking
+            break;
           }
+          move = move.next;
         } while (move);
       }
+    });
+
+    return moves;
+  }
+
+  _getNonPawnMoves(x, y, potentialMoves, piece, white) {
+    const moves = [];
+
+    // We need to filter them down to the moves that are valid in the given board state
+    potentialMoves.forEach((move) => {
+      // Regular move (possibly a slide move)
+      // Return moves until no more moves in this direction, *or* we encounter a blocked space
+      do {
+        const dest = this.getSpace(move.x, move.y);
+
+        if (dest) {
+          // Space is occupied...
+          if (Board.isWhite(dest) !== white) {
+            // by an enemy piece
+            moves.push({ x: move.x, y: move.y, capture: true });
+          }
+          // Stop sliding
+          move = null;
+        } else {
+          // Space is empty, we can freely move here...
+          moves.push({ x: move.x, y: move.y, capture: false });
+          // ... and continue sliding
+          move = move.next;
+        }
+      } while (move);
     });
 
     return moves;
@@ -219,7 +246,7 @@ export default class Board {
       new PawnMove(x, y + (2 * dy), moves[moves.length - 1], false);
     }
 
-    // Captures
+    // Captures (side-to-side moves)
     if (x > 1) {
       moves.push(new PawnMove(x - 1, y + dy, null, true));
     }
