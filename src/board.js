@@ -76,9 +76,9 @@ export default class Board {
     return moveCache[x][y][piece];
   }
 
-  // Return a list of moves for the piece at (x, y)
-  getMoves(x, y) {
-    const piece = this.getSpace(x, y);
+  // Return a list of all possible moves for the given space, even those that are illegal because
+  // they would put the player's own king in check
+  _getPotentialMoves(x, y, piece) {
     const white = Board.isWhite(piece);
 
     // Potential moves are the cached list of possible moves for the given piece at the given location
@@ -86,8 +86,23 @@ export default class Board {
 
     if (piece === 'p' || piece === 'P') {
       return this._getPawnMoves(x, y, potentialMoves, piece, white);
+    } else {
+      return this._getNonPawnMoves(x, y, potentialMoves, piece, white);
     }
-    return this._getNonPawnMoves(x, y, potentialMoves, piece, white);
+  }
+
+  // Return a list of moves for the piece at (x, y)
+  getMoves(x, y) {
+    const piece = this.getSpace(x, y);
+    const white = Board.isWhite(piece);
+
+    const potentialMoves = this._getPotentialMoves(x, y, piece);
+
+    // Only return moves that don't place the current player in check
+    return potentialMoves.filter((m) => {
+      const newBoard = this.move(x, y, m.x, m.y);
+      return !newBoard.playerIsInCheck(white);
+    });
   }
 
   _getPawnMoves(x, y, potentialMoves, piece, white) {
@@ -162,6 +177,74 @@ export default class Board {
     newBoard._clearSpace(x1, y1);
 
     return newBoard;
+  }
+
+  // Return true if the given player is in check/
+  // @param player bool white: true, black: false
+  playerIsInCheck(white) {
+    const king = white ? 'K' : 'k';
+
+    const kingSpace = this.findSpace((x, y, p) => { return p === king; });
+
+    if (!kingSpace) {
+      throw new Error(`Error, cannot find ${white ? 'white' : 'black'} king`);
+    }
+
+    // See if any other piece is threatening the king
+    const threat = this.findSpace((x, y, p) => {
+      if (!p) { return false; }
+
+      return this._getPotentialMoves(x, y, p).find((move) => {
+        return move.x === kingSpace.x && move.y === kingSpace.y;
+      });
+    });
+
+    console.log(threat);
+    return !!threat;
+  }
+
+
+  getSpaces() {
+    return this._spaces;
+  }
+
+  findKing(color) {
+    const search = (color === 'white' ? 'K' : 'k');
+  }
+
+  findSpace(callback) {
+    for (let x = 0; x < 8; x += 1) {
+      for (let y = 0; y < 8; y += 1) {
+        const p = this.getSpace(x, y);
+        if (callback(x, y, p)) {
+          return [x, y, p];
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  eachSpace(callback) {
+    for (let x = 0; x < 8; x += 1) {
+      for (let y = 0; y < 8; y += 1) {
+        callback(x, y, this.getSpace(x, y));
+      }
+    }
+  }
+
+  eachMove(callback) {
+    for (let x = 0; x < 8; x += 1) {
+      for (let y = 0; y < 8; y += 1) {
+        const moves = this.getMoves(x, y);
+        for (let i = 0; i < moves.length; i += 1) {
+          if (callback(x, y, moves[i]) === false) {
+            return;
+          }
+        }
+      }
+    }
+    return true;
   }
 
   getSpace(x, y) {
@@ -332,22 +415,6 @@ export default class Board {
   //
   //   throw new Error('getSpace expects 1 or 2 arguments');
   // }
-
-  getSpaces() {
-    return this._spaces;
-  }
-
-  findKing(color) {
-    const search = (color === 'white' ? 'K' : 'k');
-  }
-
-  eachSpace(callback) {
-    for (let x = 0; x < 8; x += 1) {
-      for (let y = 0; y < 8; y += 1) {
-        callback(x, y, this.getSpace(x, y));
-      }
-    }
-  }
 
   // eachPiece(color, callback) {
   //   if (arguments.length === 1) {

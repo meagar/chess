@@ -13,17 +13,17 @@ describe('chess', () => {
 
   describe('#getMoves', () => {
     it('should include captures for a pawn', () => {
-      const game = h.getGame({ e3: 'P', d4: 'n' });
+      const game = h.getGame({ e3: 'P', d4: 'n', a1: 'k', h8: 'K' });
       assert.deepEqual(h.getMoves(game, 'e3'), ['d4c', 'e4']);
     });
 
     it('should jump over pieces for a knight', () => {
-      const game = h.getGame({ c3: 'P', c4: 'P', c5: 'P', d4: 'n' });
+      const game = h.getGame({ c3: 'P', c4: 'P', c5: 'P', d4: 'n', a1: 'k', h8: 'K' });
       assert.deepEqual(h.getMoves(game, 'd4'), ['b3', 'b5', 'c2', 'c6', 'e2', 'e6', 'f3', 'f5']);
     });
 
     it('should slide until a capture or blocked space for a rook', () => {
-      const game = h.getGame({ g2: 'R', g5: 'p' });
+      const game = h.getGame({ g2: 'R', g5: 'p', a1: 'k', h8: 'K' });
       assert.deepEqual(h.getMoves(game, 'g2'), ['a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g1', 'g3', 'g4', 'g5c', 'h2']);
     });
   });
