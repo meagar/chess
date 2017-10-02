@@ -22,7 +22,7 @@ describe('Pawn', () => {
     });
   });
 
-  describe('promotion', () => {
+  describe.only('promotion', () => {
     function setupGame() {
       return h.getGame({ f7: 'P', d8: 'k', d1: 'K' });
     }
@@ -35,7 +35,7 @@ describe('Pawn', () => {
           // Success handler should not be called
           assert.fail('success handler was called');
         }, (error) => {
-          assert(error.message.match(/promote/));
+          assert(error.message.match(/promotion/));
         });
       });
     });
@@ -43,14 +43,14 @@ describe('Pawn', () => {
     context('when the promotion is to Queen', () => {
       it('promots to queen', () => {
         const game = setupGame();
-        function promote() {
+        function promotion() {
           return new Promise((resolve) => {
-            resolve('q');
+            resolve('Q');
           });
         }
 
-        return game.move('f7', 'f8', { promote }).then(() => {
-          assert.equal(game.getSpace('f8').getPiece().ch, 'Q');
+        return game.move('f7', 'f8', { promotion }).then(() => {
+          assert.equal(game.getPiece('f8'), 'Q');
         });
       });
     });

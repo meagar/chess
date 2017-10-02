@@ -86,9 +86,9 @@ export default class Board {
 
     if (piece === 'p' || piece === 'P') {
       return this._getPawnMoves(x, y, potentialMoves, piece, white);
-    } else {
-      return this._getNonPawnMoves(x, y, potentialMoves, piece, white);
     }
+
+    return this._getNonPawnMoves(x, y, potentialMoves, piece, white);
   }
 
   // Return a list of moves for the piece at (x, y)
@@ -169,11 +169,18 @@ export default class Board {
   }
 
   // Return a new board with the given move applied
-  move(x1, y1, x2, y2) {
+  move(x1, y1, x2, y2, promotion = null) {
     const newBoard = new Board(this._spaces);
     const piece = newBoard.getSpace(x1, y1);
+
+    if (promotion) {
+      if (Board.isWhite(promotion) !== Board.isWhite(piece)) {
+        throw new Error(`Promotion piece is the wrong color: ${promotion}`);
+      }
+    }
+
     /* eslint-disable no-underscore-dangle */
-    newBoard._setSpace(x2, y2, piece);
+    newBoard._setSpace(x2, y2, promotion || piece);
     newBoard._clearSpace(x1, y1);
 
     return newBoard;
@@ -194,12 +201,11 @@ export default class Board {
     const threat = this.findSpace((x, y, p) => {
       if (!p) { return false; }
 
-      return this._getPotentialMoves(x, y, p).find((move) => {
-        return move.x === kingSpace.x && move.y === kingSpace.y;
+      return !!this._getPotentialMoves(x, y, p).find((move) => {
+        return move.x === kingSpace[0] && move.y === kingSpace[1];
       });
     });
 
-    console.log(threat);
     return !!threat;
   }
 
@@ -239,7 +245,7 @@ export default class Board {
         const moves = this.getMoves(x, y);
         for (let i = 0; i < moves.length; i += 1) {
           if (callback(x, y, moves[i]) === false) {
-            return;
+            return undefined;
           }
         }
       }

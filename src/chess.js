@@ -1,11 +1,13 @@
 import Board from './board';
 
-const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+// const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 // Pawn capture test
 // const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/2pp7/3P7/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 // A board where the black king can move into check
 // const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1';
 // const INITIAL_BOARD = 'rnbqkbnr/2ppppp1/pp5p/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1';
+// A board where white can promote
+const INITIAL_BOARD = '8/1P6/8/8/k/8/K4p/8 w KQkq - 0 1'
 
 export default class Chess {
   constructor(whiteFn, blackFn) {
@@ -75,7 +77,7 @@ export default class Chess {
         from: label,
         to: Board.coordsToLabel(m.x, m.y),
         capture: m.capture === true,
-        promote: m.promote === true,
+        promotion: m.promotion === true,
       };
     });
   }
@@ -92,54 +94,30 @@ export default class Chess {
       throw new Error('Invalid move: Wrong piece color');
     }
 
-    if (!this.getMoves(from).find(m => m.to === to)) {
+    const move = this.getMoves(from).find(m => m.to === to);
+
+    if (!move) {
       throw new Error(`Invalid move: Can't move from ${from} to ${to}`);
     }
 
-    this._boardStates.push(this._board);
-    this._board = this._board.move(fromX, fromY, toX, toY);
+    return new Promise((resolve, reject) => {
+      let movePromise = Promise.resolve();
 
-    this._currentTurnWhite = !this._currentTurnWhite;
+      if (move.promotion) {
+        if (!options.promotion) {
+          throw new Error('This move requires a promotion but options.promotion was null');
+        }
+        movePromise = options.promotion(this, to, piece);
+      }
 
-    return Promise.resolve();
-
-    // const fromSpace = this.board.getSpace
-    // const toSpace = this.board.getSpace(to);
-    // const piece = fromSpace.getPiece();
-    //
-    // if (piece.getColor() !== this.getCurrentTurn()) {
-    //   throw new Error(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
-    // }
-    //
-    // if (this._canMove(fromSpace, toSpace, piece, options)) {
-    //   // Make sure we can legally move to the target space
-    //   const capture = toSpace.getPiece();
-    //   toSpace.setPiece(piece);
-    //   fromSpace.clearPiece();
-    //
-    //   let moved;
-    //
-    //   if (piece.canPromote && piece.canPromote(toSpace)) {
-    //     moved = new Promise((resolve, reject) => {
-    //       options.promote(toSpace).then((ch) => {
-    //         // Promoted
-    //         const newPiece = Chess.buildPiece(toSpace.getPiece().white() ? ch.toUpperCase() : ch.toLowerCase());
-    //         toSpace.setPiece(newPiece);
-    //         resolve();
-    //       }, () => {
-    //         // Promotion cancelled
-    //         toSpace.setPiece(capture);
-    //         fromSpace.setPiece(piece);
-    //         reject('Move cancelled by user');
-    //       });
-    //     });
-    //   } else {
-    //     moved = Promise.resolve();
-    //   }
-    //
-    //   return moved.then(() => { this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black'; });
-    // }
-    // return Promise.reject('Illegal move');
+      movePromise.then((promotion) => {
+        const newBoard = this._board.move(fromX, fromY, toX, toY, promotion);
+        this._boardStates.push(this._board);
+        this._board = newBoard;
+        this._currentTurnWhite = !this._currentTurnWhite;
+        resolve();
+      });
+    });
   }
 
   _canMove(fromSpace, toSpace, piece, options) {
@@ -178,9 +156,11 @@ export default class Chess {
   }
 
   playerIsInCheck(color) {
-    return false;
-    // const kingSpace = this.getBoard().findKing(color);
-    // return kingSpace.isUnderThreat(this.getBoard());
+    if (color !== 'white' && color !== 'black') {
+      throw new Error(`Invalid color given to #playerIsInCheck: ${color}`);
+    }
+
+    return this._board.playerIsInCheck(color === 'white');
   }
 
   getSpace(rank, file) {
