@@ -80,7 +80,27 @@ describe('chess', () => {
   });
 
   describe('checkMate', () => {
-    it('correctly reports checkmate');
+    it('correctly reports black victory', () => {
+      const game = h.getGame({ c1: 'K', a2: 'q', d3: 'k' });
+      assert.equal(game.getCurrentTurn(), 'white');
+      return game.move('c1', 'd1').then(() => {
+        assert.equal(game.getCurrentTurn(), 'black');
+        return game.move('a2', 'd2');
+      }).then(() => {
+        assert.equal(game.getCurrentTurn(), 'white');
+        assert.equal(game.getWinner(), 'black');
+      });
+    });
+
+    it('correctly reports white victory', () => {
+      const game = h.getGame({ d6: 'K', a7: 'Q', d8: 'k' });
+      assert.equal(game.getCurrentTurn(), 'white');
+      assert.equal(game.getWinner(), undefined);
+      return game.move('a7', 'd7').then(() => {
+        assert.equal(game.getCurrentTurn(), 'black');
+        assert.equal(game.getWinner(), 'white');
+      });
+    });
   });
 
   describe('draws', () => {

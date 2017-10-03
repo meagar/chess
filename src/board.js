@@ -209,13 +209,34 @@ export default class Board {
     return !!threat;
   }
 
+  playerIsInCheckMate(white) {
+    if (this.playerIsInCheck(white)) {
+      // Loop over each of our pieces, and see if it has any moves
+      // If any piece has at least one move, we're not in checkmate
+      return !this.findSpace((x, y, p) => {
+        // skip empty spaces, or pieces of the opposite color
+        if (!p || Board.isWhite(p) !== white) {
+          return false;
+        }
+
+        return this.getMoves(x, y).length > 0;
+      });
+    }
+
+    return false;
+  }
 
   getSpaces() {
     return this._spaces;
   }
 
-  findKing(color) {
-    const search = (color === 'white' ? 'K' : 'k');
+  findWinner() {
+    if (this.playerIsInCheckMate(true)) {
+      return true;
+    } else if (this.playerIsInCheckMate(false)) {
+      return false;
+    }
+    return undefined;
   }
 
   findSpace(callback) {
@@ -409,62 +430,6 @@ export default class Board {
   static buildMove(x, y, MoveClass = Move) {
     return (x >= 0 && x < 8 && y > 0 && y < 8) && new MoveClass(x, y);
   }
-
-  // getSpace(...args) {
-  //   if (args.length === 1) {
-  //     // Space label (1a, 2b, etc)
-  //     return this.spaces[args[0]];
-  //   } else if (args.length === 2) {
-  //     // x,y coord
-  //     return this.rows[args[0]][args[1]];
-  //   }
-  //
-  //   throw new Error('getSpace expects 1 or 2 arguments');
-  // }
-
-  // eachPiece(color, callback) {
-  //   if (arguments.length === 1) {
-  //     callback = color;
-  //     color = false;
-  //   }
-  //
-  //   this.eachSpace((space) => {
-  //     const piece = space.getPiece();
-  //     if (piece) {
-  //       if (!color || piece.getColor() === color) {
-  //         callback(piece, space);
-  //       }
-  //     }
-  //   });
-  // }
-  //
-  // // movable - If true, only return the space if it's empty
-  // // capture - If true, only return the space if it contains a piece of the opposite color
-  // getRelativeSpace(space, piece, dx, dy, movable = false, capture = null) {
-  //   if (capture === null) {
-  //     capture = movable;
-  //   }
-  //
-  //   if (piece.white()) {
-  //     dy = -dy;
-  //   }
-  //
-  //   const x = space.x + dx;
-  //   const y = space.y + dy;
-  //   const dest = (this.rows[y] && this.rows[y][x]);
-  //
-  //   if (dest) {
-  //     if (movable) {
-  //       if (dest.isEmpty() || (capture && (dest.piece.getColor() !== piece.getColor()))) {
-  //         return dest;
-  //       }
-  //     } else {
-  //       return dest;
-  //     }
-  //   }
-  //
-  //   return null;
-  // }
 }
 
 Board.ROW_LABELS = ROW_LABELS;

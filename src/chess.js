@@ -1,13 +1,15 @@
 import Board from './board';
 
-// const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
 // Pawn capture test
 // const INITIAL_BOARD = 'rnbqkbnr/pppppppp/8/2pp7/3P7/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
 // A board where the black king can move into check
 // const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1';
-// const INITIAL_BOARD = 'rnbqkbnr/2ppppp1/pp5p/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1';
+
 // A board where white can promote
-const INITIAL_BOARD = '8/1P6/8/8/k/8/K4p/8 w KQkq - 0 1'
+// const INITIAL_BOARD = '8/1P6/8/8/k/8/K4p/8 w KQkq - 0 1';
 
 export default class Chess {
   constructor(whiteFn, blackFn) {
@@ -142,13 +144,17 @@ export default class Chess {
   }
 
   getWinner() {
-    return null;
-    // const color = this.getPlayerInCheck();
-    //
-    // // Figure out if either player is in check, and if that player can escape it
-    // this.board.eachPiece(color, (piece, space) => {
-    //   this.getMoves(space, piece);
-    // });
+    // if it's white's turn, black just moved and white may be in mate
+    if (this._currentTurnWhite === true && this._board.playerIsInCheckMate(true)) {
+      return 'black';
+    }
+
+    // It's black's turn, white just moved and black may be in mate
+    if (this._currentTurnWhite === false && this._board.playerIsInCheckMate(false)) {
+      return 'white';
+    }
+
+    return undefined;
   }
 
   getPlayerInCheck() {
@@ -192,10 +198,6 @@ export default class Chess {
     const [x, y] = Board.labelToCoords(ch);
     return Board.getSpaceColor(x, y);
   }
-
-  //
-  // Private
-  //
 
   _persistCastling() {
     const castling = Object.keys(this.castling).filter(key => this.castling[key]).join('');

@@ -22,7 +22,7 @@ describe('Pawn', () => {
     });
   });
 
-  describe.only('promotion', () => {
+  describe('promotion', () => {
     function setupGame() {
       return h.getGame({ f7: 'P', d8: 'k', d1: 'K' });
     }
