@@ -16,7 +16,7 @@ export default class Chess {
     this.ROW_LABELS = Board.ROW_LABELS;
     this.COL_LABELS = Board.COL_LABELS;
 
-    this._boardStates = [];
+    this._gameStates = [];
     this._board = new Board();
 
     this.whiteFn = whiteFn;
@@ -84,6 +84,10 @@ export default class Chess {
     });
   }
 
+  getStates() {
+    return this._gameStates;
+  }
+
   // Returns a promise
   move(from, to, options = {}) {
     const [fromX, fromY] = Board.labelToCoords(from);
@@ -114,7 +118,7 @@ export default class Chess {
 
       movePromise.then((promotion) => {
         const newBoard = this._board.move(fromX, fromY, toX, toY, promotion);
-        this._boardStates.push(this._board);
+        this._gameStates.push(this.persistGame());
         this._board = newBoard;
         this._currentTurnWhite = !this._currentTurnWhite;
         resolve();
