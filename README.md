@@ -3,6 +3,8 @@ Back-end classes for a Chess game.
 
 UI exists [here](http://github.com/meagar/vue-chess).
 
+This is a toy, and incomplete.
+
 ## Development
 
 `webpack.config.js` is setup to output to `../vue-chess/static`, so just `--watch` and VueChess should receive the
